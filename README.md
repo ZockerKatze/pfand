@@ -42,7 +42,7 @@ A modern deposit calculator application for managing bottle and container deposi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/pfandrechner.git
+git clone https://github.com/ZockerKatze/pfandrechner.git
 cd pfandrechner
 ```
 
