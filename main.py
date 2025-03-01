@@ -24,11 +24,12 @@ class PfandCalculator:
         
         self.PRICES = {
             "Flaschen": 0.25,
+            "Bierflasche": 0.20,
             "Kasten": 1.25,
             "Dose": 0.25,
             "Plastikflasche": 0.25
         }
-        self.products = ["Flaschen", "Kasten", "Dose", "Plastikflasche"]
+        self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche"]
         self.quantities = {}
         self.images = {}
         self.deposit_history = self.load_deposit_history()
@@ -47,6 +48,10 @@ class PfandCalculator:
 
     def load_image(self, product_name):
         try:
+            # Use Flaschen icon for Bierflasche
+            if product_name == "Bierflasche":
+                product_name = "Flaschen"
+                
             image_path = f"images/{product_name.lower()}.png"
             if os.path.exists(image_path):
                 image = Image.open(image_path)
@@ -419,15 +424,16 @@ class PfandCalculator:
     def show_deposit_history(self):
         history_window = tk.Toplevel(self.root)
         history_window.title("Pfand Abgabe Historie")
-        history_window.geometry("600x400")
+        history_window.geometry("700x400")
 
         main_frame = ttk.Frame(history_window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        tree = ttk.Treeview(main_frame, columns=('Datum', 'Flaschen', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt'), show='headings')
+        tree = ttk.Treeview(main_frame, columns=('Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt'), show='headings')
         
         tree.heading('Datum', text='Datum', anchor='center')
         tree.heading('Flaschen', text='Flaschen', anchor='center')
+        tree.heading('Bierflasche', text='Bierflasche', anchor='center')
         tree.heading('Kasten', text='Kasten', anchor='center')
         tree.heading('Dose', text='Dose', anchor='center')
         tree.heading('Plastikflasche', text='Plastikflasche', anchor='center')
@@ -435,6 +441,7 @@ class PfandCalculator:
 
         tree.column('Datum', width=100, anchor='center')
         tree.column('Flaschen', width=70, anchor='center')
+        tree.column('Bierflasche', width=70, anchor='center')
         tree.column('Kasten', width=70, anchor='center')
         tree.column('Dose', width=70, anchor='center')
         tree.column('Plastikflasche', width=100, anchor='center')
@@ -450,6 +457,7 @@ class PfandCalculator:
         main_frame.grid_rowconfigure(0, weight=1)
 
         total_flaschen = sum(deposit['quantities']['Flaschen'] for deposit in self.deposit_history)
+        total_bierflasche = sum(deposit['quantities'].get('Bierflasche', 0) for deposit in self.deposit_history)
         total_kasten = sum(deposit['quantities']['Kasten'] for deposit in self.deposit_history)
         total_dose = sum(deposit['quantities']['Dose'] for deposit in self.deposit_history)
         total_plastik = sum(deposit['quantities']['Plastikflasche'] for deposit in self.deposit_history)
@@ -459,6 +467,7 @@ class PfandCalculator:
             tree.insert('', tk.END, values=(
                 deposit['date'],
                 deposit['quantities']['Flaschen'],
+                deposit['quantities'].get('Bierflasche', 0),
                 deposit['quantities']['Kasten'],
                 deposit['quantities']['Dose'],
                 deposit['quantities']['Plastikflasche'],
@@ -468,12 +477,13 @@ class PfandCalculator:
         totals_frame = ttk.Frame(main_frame)
         totals_frame.grid(row=1, column=0, sticky='ew', pady=(5, 0))
 
-        totals_frame.grid_columnconfigure(0, minsize=100)
-        totals_frame.grid_columnconfigure(1, minsize=70)
-        totals_frame.grid_columnconfigure(2, minsize=70)
-        totals_frame.grid_columnconfigure(3, minsize=70)
-        totals_frame.grid_columnconfigure(4, minsize=100)
-        totals_frame.grid_columnconfigure(5, minsize=80)
+        totals_frame.grid_columnconfigure(0, minsize=100)  # Datum
+        totals_frame.grid_columnconfigure(1, minsize=70)   # Flaschen
+        totals_frame.grid_columnconfigure(2, minsize=70)   # Bierflasche
+        totals_frame.grid_columnconfigure(3, minsize=70)   # Kasten
+        totals_frame.grid_columnconfigure(4, minsize=70)   # Dose
+        totals_frame.grid_columnconfigure(5, minsize=100)  # Plastikflasche
+        totals_frame.grid_columnconfigure(6, minsize=80)   # Gesamt
 
         separator = ttk.Separator(main_frame, orient='horizontal')
         separator.grid(row=2, column=0, sticky='ew', pady=2)
@@ -481,10 +491,11 @@ class PfandCalculator:
         bold_font = ('TkDefaultFont', 9, 'bold')
         ttk.Label(totals_frame, text="Gesamt:", font=bold_font).grid(row=0, column=0, sticky='w', padx=5)
         ttk.Label(totals_frame, text=str(total_flaschen), font=bold_font).grid(row=0, column=1, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_kasten), font=bold_font).grid(row=0, column=2, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_dose), font=bold_font).grid(row=0, column=3, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_plastik), font=bold_font).grid(row=0, column=4, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=f"€{total_amount:.2f}", font=bold_font).grid(row=0, column=5, sticky='e', padx=5)
+        ttk.Label(totals_frame, text=str(total_bierflasche), font=bold_font).grid(row=0, column=2, sticky='n', padx=5)
+        ttk.Label(totals_frame, text=str(total_kasten), font=bold_font).grid(row=0, column=3, sticky='n', padx=5)
+        ttk.Label(totals_frame, text=str(total_dose), font=bold_font).grid(row=0, column=4, sticky='n', padx=5)
+        ttk.Label(totals_frame, text=str(total_plastik), font=bold_font).grid(row=0, column=5, sticky='n', padx=5)
+        ttk.Label(totals_frame, text=f"€{total_amount:.2f}", font=bold_font).grid(row=0, column=6, sticky='e', padx=5)
 
     def make_deposit(self):
         deposit_dialog = tk.Toplevel(self.root)
@@ -585,12 +596,13 @@ class PfandCalculator:
             with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile, delimiter=';')
                 
-                writer.writerow(['Datum', 'Flaschen', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt (€)'])
+                writer.writerow(['Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt (€)'])
                 
                 for deposit in self.deposit_history:
                     writer.writerow([
                         deposit['date'],
                         deposit['quantities']['Flaschen'],
+                        deposit['quantities'].get('Bierflasche', 0),
                         deposit['quantities']['Kasten'],
                         deposit['quantities']['Dose'],
                         deposit['quantities']['Plastikflasche'],

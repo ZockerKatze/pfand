@@ -1,115 +1,199 @@
-# Österreichischer Pfandrechner 🥤
+# Pfandrechner Application Suite
 
-A modern deposit calculator application for managing bottle and container deposits in Austria. Track your recyclables, earn achievements, and manage your deposit history with this easy-to-use GUI application.
+A comprehensive application for managing deposit (Pfand) calculations with a modern GUI and build utilities.
 
-## Features 🌟
+## 🗂️ Project Structure
 
-- **Multiple Container Types**
-  - Flaschen (Bottles)
-  - Kasten (Crates)
-  - Dose (Cans)
-  - Plastikflasche (Plastic Bottles)
+### Core Application (`main.py`)
+The main application for deposit calculations featuring:
+- 💰 Deposit calculation for various container types
+- 🏆 Achievement system with unlockable rewards
+- 📊 Deposit history tracking and export
+- 💾 Data persistence and management
+- 🖼️ Image support for containers and achievements
+- 🌟 Modern tkinter-based GUI
 
-- **Achievement System** 🏆
-  - Collection Achievements
-    - "Krass, Weiter So!" - Collect 100 of each item
-    - "Adlersson wäre neidisch!" - Collect 500 of each item
-    - "Arbeitslos I" - Collect 1000 of each item
-    - "Arbeitslos II" - Total of 2000 items
-    - "Arbeitslos III" - Total of 3000 items
-    - "Krankhafte Sucht!" - More than 3000 items
-  - Deposit Achievements
-    - "Depositer!" - First deposit
-    - "Depositer I" - 10 deposits
-    - "Depositer II" - 50 deposits
-    - "Depositer III" - 100 deposits
-    - "Meister Depositer" - 150 deposits
+Key Features:
+- Real-time deposit calculations
+- Achievement system with multiple tiers
+- History tracking with CSV export
+- Automatic data saving
+- Image management system
+- Keyboard shortcuts for common actions
 
-- **Deposit Management** 📊
-  - Quick deposit with current date
-  - Custom date deposit
-  - Complete deposit history
-  - Export history to CSV
+### Build Utility (`buildutil/`)
+A suite of tools for building, managing, and deploying the application.
 
-## Requirements 📋
+#### GUI Interface (`buildutil/gui.py`)
+Modern graphical interface for build management:
+- 🎨 Professional UI with Light/Dark themes
+- 🔄 Real-time build monitoring
+- 📝 Log management system
+- ⌨️ Keyboard shortcuts
+- 🛠️ Build and clean operations
+- 💡 Enhanced tooltips
 
+Shortcuts:
+- `Ctrl+B` - Build executable
+- `Ctrl+C` - Clean repository
+- `Ctrl+S` - Save log
+- `Ctrl+L` - Clear log
+- `Ctrl+T` - Toggle theme
+
+#### Build Script (`buildutil/build.py`)
+Handles the creation of executables:
+- 📦 PyInstaller integration
+- 🔄 Automatic dependency management
+- 📁 Resource bundling
+- 📝 Build logging
+- ⚠️ Error handling
+- 🧹 Build cleanup
+
+Features:
+- Automatic package installation
+- Resource management
+- Cross-platform support
+- Build verification
+- Progress reporting
+
+#### Cleanup Utility (`buildutil/clean.py`)
+Manages repository cleanliness:
+- 🧹 Build artifact removal
+- 🗑️ Cache cleanup
+- 🔍 Pattern matching
+- 🎨 Colored output
+- ✅ Safe operations
+
+Capabilities:
+- Intelligent cleanup
+- Safe file handling
+- Progress feedback
+- Dry-run support
+
+## 🚀 Getting Started
+
+### Prerequisites
 - Python 3.x
-- tkinter (usually comes with Python)
-- Pillow (PIL)
-- tkcalendar
+- Required packages:
+  ```
+  tkinter
+  pillow
+  tkcalendar
+  pyinstaller
+  ```
 
-## Installation 🔧
-
+### Installation
 1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd pfandrechner
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Usage
+
+#### Running the Application
 ```bash
-git clone https://github.com/yourusername/pfandrechner.git
-cd pfandrechner
+python main.py
 ```
 
-2. Install required packages:
-```bash
-pip install pillow tkcalendar
+#### Building the Executable
+1. Using the GUI:
+   ```bash
+   python buildutil/gui.py
+   ```
+
+2. Using command line:
+   ```bash
+   python buildutil/build.py
+   ```
+
+#### Cleaning the Repository
+1. Using the GUI:
+   - Launch the build utility
+   - Click "Clean Repository" or use `Ctrl+C`
+
+2. Using command line:
+   ```bash
+   python buildutil/clean.py
+   ```
+
+## 🎨 Themes and Styling / For buildutil
+
+### Light Theme
+```
+Background: #ffffff
+Text: #2c3e50
+Buttons: #3498db
+Accents: #34495e
+Success: #2ecc71
+Error: #e74c3c
 ```
 
-## Running the Application 🚀
-
-### Windows
-- Double-click `run.bat`
-- Or run from command prompt:
-```bash
-python run.py
+### Dark Theme
+```
+Background: #2c3e50
+Text: #ecf0f1
+Buttons: #3498db
+Accents: #95a5a6
+Success: #27ae60
+Error: #c0392b
 ```
 
-### Linux/Unix
-- Make the run script executable:
-```bash
-chmod +x run.sh
-```
-- Run the application:
-```bash
-./run.sh
-```
+## 🔄 File Interactions
 
-## Keyboard Shortcuts ⌨️
+### Application Flow
+1. `main.py` - Core application
+   - Handles user interface
+   - Manages data
+   - Processes calculations
+   - Tracks achievements
 
-- **File Operations**
-  - `Ctrl+S` - Save quantities
-  - `Ctrl+O` - Open file location
-  - `Ctrl+Shift+F1` - Delete save file
-  - `Ctrl+Q` - Quit application
+2. `buildutil/gui.py` - Build interface
+   - Coordinates build operations
+   - Manages cleaning operations
+   - Handles logging
+   - Provides user feedback
 
-- **Deposit Operations**
-  - `Ctrl+D` - Quick deposit
-  - `Ctrl+H` - View deposit history
-  - `Ctrl+E` - Export history to CSV
-  - `Ctrl+Shift+F2` - Clear deposit history
+3. `buildutil/build.py` - Build operations
+   - Creates executable
+   - Manages dependencies
+   - Bundles resources
+   - Handles errors
 
-- **Achievement Operations**
-  - `Ctrl+F6` - View achievements
-  - `Ctrl+F7` - Delete achievements
+4. `buildutil/clean.py` - Cleanup operations
+   - Removes build artifacts
+   - Cleans caches
+   - Maintains repository
 
-## File Structure 📁
+## 🛠️ Development
 
-```
-pfandrechner/
-├── main.py           # Main application code
-├── run.py           # Python launcher
-├── run.bat          # Windows launcher
-├── run.sh           # Linux/Unix launcher
-├── README.md        # This file
-└── images/          # Image assets
-    └── auszeichnung.png  # Achievement icon
-```
+### Code Structure
+- Modern Python practices
+- Object-oriented design
+- Event-driven architecture
+- Thread-safe operations
+- Error handling
+- Resource management
 
-## Contributing 🤝
+### Best Practices
+- Consistent error handling
+- Professional logging
+- Safe file operations
+- Cross-platform compatibility
+- User-centric design
+- Clean code principles
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License 📄
+### Version Control
+- Regular commits
+- Feature branches
+- Version tagging
+- Change logging
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments 👏
-
-- Thanks to all contributors and users of the application
-- Icons and images used in this project 
+## 📝 License
+MIT
