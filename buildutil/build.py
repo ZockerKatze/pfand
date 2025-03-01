@@ -126,15 +126,15 @@ def cleanup():
 def copy_resources():
     log_message("Copying resources...")
     try:
-        if not os.path.exists('dist/pfand/images'):
-            os.makedirs('dist/pfand/images')
-            log_message("Created dist/pfand/images directory")
+        if not os.path.exists('dist/pfandrechner/images'):
+            os.makedirs('dist/pfandrechner/images')
+            log_message("Created dist/pfandrechner/images directory")
         
         # Copy all files from images directory
         if os.path.exists('images'):
             for file in os.listdir('images'):
                 src = os.path.join('images', file)
-                dst = os.path.join('dist/pfand/images', file)
+                dst = os.path.join('dist/pfandrechner/images', file)
                 if os.path.isfile(src):
                     shutil.copy2(src, dst)
                     log_message(f"Copied {file} to dist directory")
