@@ -98,7 +98,12 @@ Capabilities:
 
 #### Running the Application
 ```bash
+<<<<<<< HEAD
 python main.py
+=======
+git clone https://github.com/ZockerKatze/pfandrechner.git
+cd pfandrechner
+>>>>>>> 5ac5270c020e44fd30662ce8b88d03301740ec9e
 ```
 
 #### Building the Executable
@@ -195,5 +200,14 @@ Error: #c0392b
 - Version tagging
 - Change logging
 
+<<<<<<< HEAD
 ## 📝 License
 MIT
+=======
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments 👏
+
+- Thanks to all contributors and users of the application
+- Icons and images used in this project 
+>>>>>>> 5ac5270c020e44fd30662ce8b88d03301740ec9e
