@@ -69,7 +69,20 @@ class PfandCalculator:
             if os.path.exists(image_path):
                 image = Image.open(image_path)
                 image = image.resize((50, 50), Image.Resampling.LANCZOS)
-                return ImageTk.PhotoImage(image)
+                # Store both normal and gray versions
+                self.achievement_image = ImageTk.PhotoImage(image)
+                # Create grayscale version while preserving transparency
+                gray_image = Image.new('RGBA', image.size)
+                for x in range(image.width):
+                    for y in range(image.height):
+                        r, g, b, a = image.getpixel((x, y))
+                        # Convert to grayscale while preserving alpha
+                        gray = int(0.299 * r + 0.587 * g + 0.114 * b)
+                        # Make it lighter
+                        gray = min(255, gray + 100)
+                        gray_image.putpixel((x, y), (gray, gray, gray, a))
+                self.achievement_image_gray = ImageTk.PhotoImage(gray_image)
+                return self.achievement_image
             return None
         except Exception as e:
             print(f"Error loading achievement image: {e}")
@@ -234,12 +247,7 @@ class PfandCalculator:
                 if achievement.unlocked:
                     image_label = ttk.Label(frame, image=self.achievement_image)
                 else:
-                    original = Image.open("images/auszeichnung.png").convert('L')
-                    brightened = original.point(lambda x: x + 100 if x + 100 < 255 else 255)
-                    brightened = brightened.resize((50, 50), Image.Resampling.LANCZOS)
-                    gray_photo = ImageTk.PhotoImage(brightened)
-                    self.images[f"gray_{key}"] = gray_photo
-                    image_label = ttk.Label(frame, image=self.images[f"gray_{key}"])
+                    image_label = ttk.Label(frame, image=self.achievement_image_gray)
                 image_label.grid(row=0, column=0, rowspan=2, padx=(5, 10), pady=5)
 
             content_frame = ttk.Frame(frame)
