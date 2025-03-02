@@ -7,6 +7,11 @@ import subprocess
 from datetime import datetime
 from tkcalendar import DateEntry
 import csv
+import cv2
+from pyzbar.pyzbar import decode
+import threading
+import queue
+import numpy as np
 
 class Achievement:
     def __init__(self, title, description, condition_type, condition_value):
@@ -32,7 +37,10 @@ class PfandCalculator:
         self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche"]
         self.quantities = {}
         self.images = {}
+        self.spinboxes = {}  # Store spinbox references
         self.deposit_history = self.load_deposit_history()
+        self.scanned_barcodes = set()
+        self.barcode_history = []  # Store barcode scan history
         
         self.achievements = self.initialize_achievements()
         self.load_achievements()
@@ -43,6 +51,11 @@ class PfandCalculator:
         self.create_menu()
         self.load_quantities()
         self.create_widgets()
+        
+        # Scanner window
+        self.scanner_window = None
+        self.cap = None
+        self.scanning = False
         
         self.achievement_image = self.load_achievement_image()
 
@@ -100,7 +113,14 @@ class PfandCalculator:
             "deposits_10": Achievement("Depositer I", "Cool, Weiter So!", "deposits", 10),
             "deposits_50": Achievement("Depositer II", "WoW, Echt viele Abgaben!", "deposits", 50),
             "deposits_100": Achievement("Depositer III", "Du bist der Meister der Abgaben!", "deposits", 100),
-            "deposits_150": Achievement("Meister Depositer", "Der Pfandautomat hat Angst vor dir, so viel wie du Abgegeben hast müsstest du eine Villa besitzen!", "deposits", 150)
+            "deposits_150": Achievement("Meister Depositer", "Der Pfandautomat hat Angst vor dir, so viel wie du Abgegeben hast müsstest du eine Villa besitzen!", "deposits", 150),
+            # New scanner achievements
+            "first_scan": Achievement("Scanner Neuling", "Du hast deinen ersten Barcode gescannt!", "scans", 1),
+            "scans_50": Achievement("Scanner Pro", "50 Barcodes gescannt - du kennst dich aus!", "scans", 50),
+            "scans_100": Achievement("Scanner Meister", "100 Barcodes gescannt - der Profi ist da!", "scans", 100),
+            "scans_500": Achievement("Scanner Legende", "500 Barcodes gescannt - legendärer Scanner Status erreicht!", "scans", 500),
+            "daily_10": Achievement("Tages Champion", "10 Barcodes an einem Tag gescannt!", "daily_scans", 10),
+            "daily_25": Achievement("Tages Meister", "25 Barcodes an einem Tag gescannt - sehr fleißig!", "daily_scans", 25)
         }
 
     def load_achievements(self):
@@ -219,6 +239,15 @@ class PfandCalculator:
             "deposits_150": self.achievements["deposits_150"]
         }
 
+        scanner_achievements = {
+            "first_scan": self.achievements["first_scan"],
+            "scans_50": self.achievements["scans_50"],
+            "scans_100": self.achievements["scans_100"],
+            "scans_500": self.achievements["scans_500"],
+            "daily_10": self.achievements["daily_10"],
+            "daily_25": self.achievements["daily_25"]
+        }
+
         row = 0
 
         def add_group_header(title):
@@ -285,6 +314,10 @@ class PfandCalculator:
         for key, achievement in abgeben_achievements.items():
             add_achievement(key, achievement)
 
+        add_group_header("Scanner")
+        for key, achievement in scanner_achievements.items():
+            add_achievement(key, achievement)
+
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -308,6 +341,12 @@ class PfandCalculator:
         deposit_menu.add_command(label="Historie Exportieren (CSV)", command=self.export_history_csv, accelerator="Strg+E")
         deposit_menu.add_command(label="Historie Löschen", command=self.clear_deposit_history, accelerator="Strg+Shift+F2")
 
+        scanner_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Scanner", menu=scanner_menu)
+        scanner_menu.add_command(label="Scanner öffnen", command=self.open_scanner_window, accelerator="Strg+B")
+        scanner_menu.add_separator()
+        scanner_menu.add_command(label="Barcodes Exportieren (CSV)", command=self.export_barcodes_csv, accelerator="Strg+Shift+E")
+
         achievements_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Auszeichnungen", menu=achievements_menu)
         achievements_menu.add_command(label="Auszeichnungen anzeigen", command=self.show_achievements, accelerator="Strg+F6")
@@ -319,10 +358,12 @@ class PfandCalculator:
         self.root.bind('<Control-d>', lambda e: self.quick_deposit())
         self.root.bind('<Control-h>', lambda e: self.show_deposit_history())
         self.root.bind('<Control-e>', lambda e: self.export_history_csv())
+        self.root.bind('<Control-b>', lambda e: self.open_scanner_window())
         self.root.bind('<Control-F1>', lambda e: self.handle_shift_f1(e))
         self.root.bind('<Control-F2>', lambda e: self.handle_shift_f2(e))
         self.root.bind('<Control-F6>', lambda e: self.show_achievements())
         self.root.bind('<Control-F7>', lambda e: self.delete_achievements())
+        self.root.bind('<Control-E>', lambda e: self.export_barcodes_csv() if e.state & 0x1 else self.export_history_csv())
 
     def open_file_location(self):
         current_dir = os.getcwd()
@@ -367,7 +408,7 @@ class PfandCalculator:
         messagebox.showinfo("Erfolg", "Mengen wurden erfolgreich gespeichert!")
     
     def create_widgets(self):
-        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame = ttk.Frame(self.root)
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         for i, product in enumerate(self.products):
@@ -397,6 +438,9 @@ class PfandCalculator:
                 command=lambda p=product, v=quantity_var: self.update_quantity(p, v)
             )
             spinbox.grid(row=3, column=0, pady=5)
+            
+            # Store spinbox reference
+            self.spinboxes[product] = spinbox
             
             spinbox.bind('<Return>', lambda event, p=product, v=quantity_var: self.update_quantity(p, v))
             spinbox.bind('<FocusOut>', lambda event, p=product, v=quantity_var: self.update_quantity(p, v))
@@ -663,6 +707,372 @@ class PfandCalculator:
                 messagebox.showinfo("Erfolg", "Alle Auszeichnungen wurden erfolgreich gelöscht!")
             except Exception as e:
                 messagebox.showerror("Fehler", f"Fehler beim Löschen der Auszeichnungen: {str(e)}")
+
+    def open_scanner_window(self):
+        if self.scanner_window is None or not self.scanner_window.winfo_exists():
+            self.scanner_window = tk.Toplevel(self.root)
+            self.scanner_window.title("Pfand Scanner")
+            self.scanner_window.protocol("WM_DELETE_WINDOW", self.close_scanner_window)
+            
+            # Create frames for scanner layout
+            self.camera_frame = ttk.Frame(self.scanner_window)
+            self.camera_frame.pack(side="left", padx=10, pady=5)
+            
+            self.scanner_control_frame = ttk.Frame(self.scanner_window)
+            self.scanner_control_frame.pack(side="left", padx=10, pady=5, fill="y")
+            
+            # Create camera label
+            self.camera_label = ttk.Label(self.camera_frame)
+            self.camera_label.pack()
+            
+            # Create focus control
+            focus_frame = ttk.LabelFrame(self.scanner_control_frame, text="Kamera Einstellungen")
+            focus_frame.pack(pady=5, padx=5, fill="x")
+            
+            ttk.Label(focus_frame, text="Fokus:").pack(pady=2)
+            self.focus_slider = ttk.Scale(focus_frame, from_=0, to=255, orient="horizontal")
+            self.focus_slider.set(0)
+            self.focus_slider.pack(pady=2, padx=5, fill="x")
+            
+            self.autofocus_var = tk.BooleanVar(value=True)
+            self.autofocus_check = ttk.Checkbutton(
+                focus_frame,
+                text="Autofokus",
+                variable=self.autofocus_var,
+                command=self.toggle_autofocus
+            )
+            self.autofocus_check.pack(pady=2)
+            
+            # Create image processing controls
+            process_frame = ttk.LabelFrame(self.scanner_control_frame, text="Bildverarbeitung")
+            process_frame.pack(pady=5, padx=5, fill="x")
+            
+            ttk.Label(process_frame, text="Helligkeit:").pack(pady=2)
+            self.brightness_slider = ttk.Scale(process_frame, from_=0, to=100, orient="horizontal")
+            self.brightness_slider.set(50)
+            self.brightness_slider.pack(pady=2, padx=5, fill="x")
+            
+            ttk.Label(process_frame, text="Kontrast:").pack(pady=2)
+            self.contrast_slider = ttk.Scale(process_frame, from_=0, to=100, orient="horizontal")
+            self.contrast_slider.set(50)
+            self.contrast_slider.pack(pady=2, padx=5, fill="x")
+            
+            # Start/Stop button
+            self.scan_button = ttk.Button(
+                self.scanner_control_frame,
+                text="Scannen Starten",
+                command=self.toggle_scanning
+            )
+            self.scan_button.pack(pady=10)
+            
+            # Initialize scan counter for achievements
+            self.daily_scans = 0
+            self.total_scans = 0
+            self.last_scan_date = None
+            
+            # Queue for thread-safe communication
+            self.queue = queue.Queue()
+            
+            # Set window size to match camera resolution
+            self.scanner_window.geometry("1600x800")
+
+    def close_scanner_window(self):
+        if self.scanning:
+            self.toggle_scanning()
+        self.scanner_window.destroy()
+        self.scanner_window = None
+
+    def toggle_scanning(self):
+        if not self.scanning:
+            self.cap = cv2.VideoCapture(0)
+            
+            # Set optimal camera properties for performance
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            self.cap.set(cv2.CAP_PROP_FPS, 30)  # Request 30 FPS
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Minimize buffer delay
+            
+            self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+            self.cap.set(cv2.CAP_PROP_FOCUS, 0)
+            
+            self.scanning = True
+            self.scan_button.configure(text="Scannen Stoppen")
+            self.process_video()
+        else:
+            self.scanning = False
+            if self.cap:
+                self.cap.release()
+            self.cap = None
+            self.scan_button.configure(text="Scannen Starten")
+            self.camera_label.configure(image='')
+
+    def toggle_autofocus(self):
+        if self.cap:
+            if self.autofocus_var.get():
+                self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+                self.focus_slider.state(['disabled'])
+            else:
+                self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+                self.focus_slider.state(['!disabled'])
+                self.cap.set(cv2.CAP_PROP_FOCUS, self.focus_slider.get())
+
+    def adjust_image(self, frame):
+        # This method is now only used for preview adjustments
+        brightness = self.brightness_slider.get() / 50.0 - 1.0
+        contrast = self.contrast_slider.get() / 50.0
+        
+        adjusted = cv2.convertScaleAbs(frame, alpha=contrast, beta=brightness * 127)
+        return adjusted
+
+    def process_video(self):
+        if not self.scanning:
+            return
+            
+        try:
+            ret, frame = self.cap.read()
+            if ret:
+                if not self.autofocus_var.get():
+                    self.cap.set(cv2.CAP_PROP_FOCUS, self.focus_slider.get())
+                
+                # Resize frame for faster processing (720p is plenty for barcode detection)
+                frame = cv2.resize(frame, (1280, 720))
+                
+                # Only process every 3rd frame for barcode detection
+                if hasattr(self, 'frame_count'):
+                    self.frame_count += 1
+                else:
+                    self.frame_count = 0
+                
+                if self.frame_count % 3 == 0:  # Process every 3rd frame
+                    # Process in grayscale for better performance
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    barcodes = decode(gray)
+                    
+                    for barcode in barcodes:
+                        points = barcode.polygon
+                        if len(points) == 4:
+                            pts = np.array([(p.x, p.y) for p in points])
+                            cv2.polylines(frame, [pts], True, (0, 255, 0), 2)
+                    
+                        barcode_data = barcode.data.decode('utf-8')
+                        if barcode_data not in self.scanned_barcodes:
+                            self.scanned_barcodes.add(barcode_data)
+                            self.scanner_window.after(0, lambda d=barcode_data: self.handle_barcode(d))
+                
+                # Convert and display frame
+                cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+                img = Image.fromarray(cv2image)
+                imgtk = ImageTk.PhotoImage(image=img)
+                self.camera_label.imgtk = imgtk
+                self.camera_label.configure(image=imgtk)
+            
+            if self.scanning:
+                # Use a shorter delay for higher frame rate
+                self.scanner_window.after(5, self.process_video)
+        except Exception as e:
+            print(f"Error in process_video: {e}")
+            if self.scanning:
+                self.scanner_window.after(5, self.process_video)
+
+    def handle_barcode(self, barcode_data):
+        # First dialog for Pfand symbol verification
+        verify_dialog = tk.Toplevel(self.scanner_window)
+        verify_dialog.title("Pfand Symbol Überprüfung")
+        verify_dialog.transient(self.scanner_window)
+        verify_dialog.grab_set()
+        
+        ttk.Label(verify_dialog, text="Ist ein Pfand Symbol auf dem Produkt?").pack(pady=10)
+        
+        def handle_verification(has_pfand):
+            verify_dialog.destroy()
+            if has_pfand:
+                # Add barcode to history with timestamp and Pfand status
+                self.barcode_history.append({
+                    'timestamp': datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+                    'barcode': barcode_data,
+                    'has_pfand': True
+                })
+                self.show_product_selection_dialog(barcode_data)
+            else:
+                # Add barcode to history with timestamp and Pfand status
+                self.barcode_history.append({
+                    'timestamp': datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+                    'barcode': barcode_data,
+                    'has_pfand': False
+                })
+                self.scanned_barcodes.remove(barcode_data)
+                messagebox.showinfo("Kein Pfand", "Dieses Produkt hat kein Pfand Symbol.")
+        
+        button_frame = ttk.Frame(verify_dialog)
+        button_frame.pack(pady=10)
+        ttk.Button(button_frame, text="Ja", command=lambda: handle_verification(True)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Nein", command=lambda: handle_verification(False)).pack(side=tk.LEFT, padx=5)
+
+    def show_product_selection_dialog(self, barcode_data):
+        dialog = tk.Toplevel(self.scanner_window)
+        dialog.title("Barcode Erkannt")
+        dialog.transient(self.scanner_window)
+        dialog.grab_set()
+        
+        ttk.Label(dialog, text=f"Barcode erkannt: {barcode_data}").pack(pady=10)
+        ttk.Label(dialog, text="Produkttyp auswählen:").pack(pady=5)
+        
+        product_var = tk.StringVar()
+        for product in self.products:
+            ttk.Radiobutton(dialog, text=product, variable=product_var, value=product).pack()
+        
+        def confirm():
+            selected_product = product_var.get()
+            if selected_product:
+                print(f"Erhöhe {selected_product}")  # Debug print
+                # Update quantity
+                current_qty = self.quantities.get(selected_product, 0)
+                self.quantities[selected_product] = current_qty + 1
+                print(f"Neue Menge für {selected_product}: {self.quantities[selected_product]}")  # Debug print
+                
+                # Update scan counters and check achievements
+                self.update_scan_achievements()
+                
+                # Force immediate UI update
+                def do_update():
+                    try:
+                        # Directly update the spinbox
+                        spinbox = self.spinboxes[selected_product]
+                        spinbox.set(str(self.quantities[selected_product]))
+                        spinbox.update()  # Force the spinbox to update
+                        
+                        # Update the total
+                        self.update_total()
+                        self.root.update_idletasks()  # Force the entire UI to update
+                        
+                        # Save the quantities
+                        self.save_quantities()
+                        print("UI Update und Speicherung abgeschlossen")  # Debug print
+                    except Exception as e:
+                        print(f"Fehler beim UI Update: {e}")
+                
+                # Schedule the update for the next event loop iteration
+                self.root.after(1, do_update)
+                dialog.destroy()
+        
+        def skip():
+            self.scanned_barcodes.remove(barcode_data)
+            dialog.destroy()
+        
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(pady=10)
+        ttk.Button(button_frame, text="Hinzufügen", command=confirm).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Überspringen", command=skip).pack(side=tk.LEFT, padx=5)
+
+    def update_scan_achievements(self):
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # Update daily scan counter
+        if self.last_scan_date != current_date:
+            self.daily_scans = 1
+            self.last_scan_date = current_date
+        else:
+            self.daily_scans += 1
+        
+        # Update total scan counter
+        self.total_scans += 1
+        
+        # Check scan-related achievements
+        achievements_to_check = {
+            1: "first_scan",
+            50: "scans_50",
+            100: "scans_100",
+            500: "scans_500"
+        }
+        
+        # Check total scans achievements
+        for count, achievement_key in achievements_to_check.items():
+            if self.total_scans == count and not self.achievements[achievement_key].unlocked:
+                self.unlock_achievement(achievement_key)
+                self.save_achievements()
+        
+        # Check daily scan achievements
+        daily_achievements = {
+            10: "daily_10",
+            25: "daily_25"
+        }
+        
+        for count, achievement_key in daily_achievements.items():
+            if self.daily_scans == count and not self.achievements[achievement_key].unlocked:
+                self.unlock_achievement(achievement_key)
+                self.save_achievements()
+        
+        # Save the updated scan counts
+        self.save_quantities()  # This ensures we don't lose progress
+
+    def update_ui(self):
+        print("Updating UI...")  # Debug print
+        
+        def update_spinboxes():
+            # Update all spinboxes to match quantities
+            main_frame = self.root.winfo_children()[0]  # Get the main frame
+            for frame in main_frame.winfo_children():
+                if isinstance(frame, ttk.Frame):
+                    # Find the product this frame represents
+                    for widget in frame.winfo_children():
+                        if isinstance(widget, ttk.Label) and widget.cget('text') in self.products:
+                            product = widget.cget('text')
+                            current_qty = self.quantities.get(product, 0)
+                            print(f"Setting {product} spinbox to {current_qty}")  # Debug print
+                            # Find and update the spinbox
+                            for w in frame.winfo_children():
+                                if isinstance(w, ttk.Spinbox):
+                                    w.set(str(current_qty))
+                                    w.update()
+                                    break
+            
+            # Update the total
+            self.update_total()
+            print("UI update completed")  # Debug print
+        
+        # Ensure updates happen in the main thread
+        if threading.current_thread() is threading.main_thread():
+            update_spinboxes()
+        else:
+            self.root.after(0, update_spinboxes)
+
+    def on_closing(self):
+        if self.scanner_window and self.scanner_window.winfo_exists():
+            self.close_scanner_window()
+        self.root.destroy()
+
+    def export_barcodes_csv(self):
+        if not self.barcode_history:
+            messagebox.showinfo("Info", "Keine Barcodes zum Exportieren vorhanden.")
+            return
+
+        try:
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV Dateien", "*.csv")],
+                initialfile="barcode_historie.csv"
+            )
+            
+            if not file_path:
+                return
+
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile, delimiter=';')
+                
+                # Write header
+                writer.writerow(['Datum', 'Barcode', 'Hat Pfand'])
+                
+                # Write barcode history
+                for entry in self.barcode_history:
+                    writer.writerow([
+                        entry['timestamp'],
+                        entry['barcode'],
+                        'Ja' if entry['has_pfand'] else 'Nein'
+                    ])
+            
+            messagebox.showinfo("Erfolg", "Barcode Historie wurde erfolgreich exportiert!")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Fehler beim Exportieren: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
