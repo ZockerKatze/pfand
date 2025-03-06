@@ -30,7 +30,7 @@ class PfandCalculator:
         self.PRICES = {
             "Flaschen": 0.25,
             "Bierflasche": 0.20,
-            "Kasten": 1.25,
+            "Kasten": 3.00,
             "Dose": 0.25,
             "Plastikflasche": 0.25
         }
