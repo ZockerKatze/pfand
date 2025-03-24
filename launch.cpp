@@ -6,56 +6,68 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <unistd.h>
 #include <fstream>
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
 
 int main() {
-    // Define the working directory and the command
-    const char* work_dir = getenv("HOME");
-    if (!work_dir) {
+    std::string full_work_dir;
+    std::string command;
+    std::string pid_file;
+
+#ifdef _WIN32
+    full_work_dir = "C:\\pfand";
+    command = "start /B python " + full_work_dir + "\\main.py > C:\\pfand\\pfand_pid";
+    pid_file = "C:\\pfand\\pfand_pid";
+    SetCurrentDirectory(full_work_dir.c_str());
+#else
+    const char* home_dir = getenv("HOME");
+    if (!home_dir) {
         std::cerr << "Error: HOME environment variable not found.\n";
         return 1;
     }
+    full_work_dir = std::string(home_dir) + "/pfand";
+    command = "python3 " + full_work_dir + "/main.py & echo $! > /tmp/pfand_pid";
+    pid_file = "/tmp/pfand_pid";
+    chdir(full_work_dir.c_str());
+#endif
 
-    std::string full_work_dir = std::string(work_dir) + "/pfand";
-    std::string command = "python3 " + full_work_dir + "/main.py & echo $! > /tmp/pfand_pid"; // Run in background and store PID
-
-    // Change the working directory
-    if (chdir(full_work_dir.c_str()) != 0) {
-        std::cerr << "Error: Failed to change directory to " << full_work_dir << "\n";
-        return 1;
-    }
-
-    // Launch the Python script in the background and store PID
     int ret_code = std::system(command.c_str());
     if (ret_code != 0) {
         std::cerr << "Error: Failed to execute " << command << "\n";
         return 1;
     }
 
-    std::cout << "Process started in the background. PID stored in /tmp/pfand_pid\n";
+    std::cout << "Process started in the background. PID stored in " << pid_file << "\n";
 
-    // Wait for the process to finish
-    //
-    // This doesnt really work!
-    
+#ifdef _WIN32
+    Sleep(1000);
+#else
+    sleep(1);
+#endif
 
-    sleep(1); // Allow time for PID file creation
-    std::ifstream pid_file("/tmp/pfand_pid");
+    std::ifstream pid_stream(pid_file);
     int pid;
-    if (pid_file >> pid) {
+    if (pid_stream >> pid) {
         std::cout << "Tracking process " << pid << "...\n";
+#ifdef _WIN32
+        std::string stats_command = "wmic process where ProcessId=" + std::to_string(pid) + " get ProcessId,WorkingSetSize,KernelModeTime,UserModeTime /format:csv > C:\\pfand\\pfand_stats";
+#else
+        std::string stats_command = "top -b -d 1 -p " + std::to_string(pid) + " | awk '/" + std::to_string(pid) + "/ {print $9, $10}' > /tmp/pfand_stats &";
+#endif
+        std::system(stats_command.c_str());
 
-        // Monitor CPU and RAM usage
-        std::string track_command = "top -b -d 1 -p " + std::to_string(pid) + " | awk '/" + std::to_string(pid) + "/ {print $9, $10}' > /tmp/pfand_stats &";
-        std::system(track_command.c_str());
-
-        // Wait for the process to complete
+#ifdef _WIN32
+        std::string wait_command = "timeout /t 5";
+#else
         std::string wait_command = "wait " + std::to_string(pid);
+#endif
         std::system(wait_command.c_str());
 
-        // Collect usage details
-        std::ifstream stats_file("/tmp/pfand_stats");
+        std::ifstream stats_file(pid_file);
         double total_cpu = 0, total_mem = 0;
         int count = 0;
         double cpu, mem;
