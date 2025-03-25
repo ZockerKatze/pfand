@@ -32,9 +32,11 @@ class PfandCalculator:
             "Bierflasche": 0.20,
             "Kasten": 3.00,
             "Dose": 0.25,
-            "Plastikflasche": 0.25
+            "Plastikflasche": 0.25,
+            "Monster": 0.25,
         }
-        self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche"]
+
+        self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche", "Monster"] ## maybe error bc 20er
         self.quantities = {}
         self.images = {}
         self.spinboxes = {}  # Store spinbox references
@@ -62,8 +64,14 @@ class PfandCalculator:
     def load_image(self, product_name):
         try:
             # Use Flaschen icon for Bierflasche
-            if product_name == "Bierflasche":
-                product_name = "Flaschen"
+            
+            #if product_name == "Bierflasche":
+            #   product_name = "Flaschen"
+
+            # Use Can Icon for Monster as its the same
+
+            #if product_name == "Monster":
+            #    product_name = "Dose"
                 
             image_path = f"images/{product_name.lower()}.png"
             if os.path.exists(image_path):
@@ -421,7 +429,7 @@ class PfandCalculator:
                 label = ttk.Label(frame, image=self.images[product])
                 label.grid(row=0, column=0, pady=5)
             else:
-                canvas = tk.Canvas(frame, width=100, height=100, bg='lightgray')
+                canvas = tk.Canvas(frame, width=100, height=100, bg='white')
                 canvas.grid(row=0, column=0, pady=5)
                 canvas.create_text(50, 50, text=f"Kein {product}\nBild gefunden")
             
@@ -459,7 +467,7 @@ class PfandCalculator:
             var.set(str(self.quantities.get(product, 0)))
     
     def update_total(self):
-        total = sum(self.quantities[product] * self.PRICES[product] for product in self.products)
+        total = sum(self.quantities[product] * self.PRICES[product] for product in self.products) # get total
         self.total_label.config(text=f"Gesamt: €{total:.2f}")
 
     def load_deposit_history(self):
@@ -481,7 +489,9 @@ class PfandCalculator:
         main_frame = ttk.Frame(history_window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        tree = ttk.Treeview(main_frame, columns=('Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt'), show='headings')
+        # Define Which Type of Product is in the Window (Tree)
+
+        tree = ttk.Treeview(main_frame, columns=('Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Monster', 'Gesamt'), show='headings')
         
         tree.heading('Datum', text='Datum', anchor='center')
         tree.heading('Flaschen', text='Flaschen', anchor='center')
@@ -489,6 +499,7 @@ class PfandCalculator:
         tree.heading('Kasten', text='Kasten', anchor='center')
         tree.heading('Dose', text='Dose', anchor='center')
         tree.heading('Plastikflasche', text='Plastikflasche', anchor='center')
+        tree.heading("Monster", text="Monster", anchor="center")
         tree.heading('Gesamt', text='Gesamt (€)', anchor='center')
 
         tree.column('Datum', width=100, anchor='center')
@@ -497,6 +508,7 @@ class PfandCalculator:
         tree.column('Kasten', width=70, anchor='center')
         tree.column('Dose', width=70, anchor='center')
         tree.column('Plastikflasche', width=100, anchor='center')
+        tree.column("Monster", width=70, anchor="center")
         tree.column('Gesamt', width=80, anchor='e')
 
         scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=tree.yview)
@@ -513,6 +525,7 @@ class PfandCalculator:
         total_kasten = sum(deposit['quantities']['Kasten'] for deposit in self.deposit_history)
         total_dose = sum(deposit['quantities']['Dose'] for deposit in self.deposit_history)
         total_plastik = sum(deposit['quantities']['Plastikflasche'] for deposit in self.deposit_history)
+        total_monster = sum(deposit["quantities"]["Monster"] for deposit in self.deposit_history)
         total_amount = sum(deposit['total'] for deposit in self.deposit_history)
 
         for deposit in self.deposit_history:
@@ -523,6 +536,7 @@ class PfandCalculator:
                 deposit['quantities']['Kasten'],
                 deposit['quantities']['Dose'],
                 deposit['quantities']['Plastikflasche'],
+                deposit["quantities"]["Monster"],
                 f"{deposit['total']:.2f}"
             ))
 
