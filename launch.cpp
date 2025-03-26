@@ -1,7 +1,12 @@
 /********************************************************
  * 	This is a Launch Script for the PfandApp	*
+ ********************************************************
+ *							*
  * 		   Written 24.03.2025			*
- * 		C++ V20 / BUILD 1 / COPY		*
+ * 		   Updated 25.03.2025			*
+ * 		   					*
+ ********************************************************
+ * 		C++ V23 / BUILD 3 / RELEASE		*
  *******************************************************/
 
 
@@ -16,6 +21,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <chrono>
+#include <thread>
 #include <iomanip>  // For formatting output
 #ifdef _WIN32
 #include <windows.h>
@@ -38,45 +45,54 @@ void print_stat(const std::string& stat_name, const std::string& value) {
               << "| " << std::setw(20) << std::left << value << "|\n";
 }
 
+// Declare the GREEN color Variable
+
+const char * GREEN = "\033[1;32m";
+const char * RESETC = "\033[0m";
 
 void print_ascii_art() {
-    std::string ascii_art[] = {
-        "██████╗ ███████╗ █████╗ ███╗   ██╗██████╗  █████╗ ██████╗ ██████╗ ",
-        "██╔══██╗██╔════╝██╔══██╗████╗  ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗",
-        "██████╔╝█████╗  ███████║██╔██╗ ██║██║  ██║███████║██████╔╝██████╔╝",
-        "██╔═══╝ ██╔══╝  ██╔══██║██║╚██╗██║██║  ██║██╔══██║██╔═══╝ ██╔═══╝ ",
-        "██║     ██║     ██║  ██║██║ ╚████║██████╔╝██║  ██║██║     ██║     ",
-        "╚═╝     ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝     ",
-        "                                                                  ",
-        "██╗   ██╗   ██████╗ ███████╗   ███████╗██████╗    ███████╗        ",
-        "██║   ██║  ██╔════╝ ██╔════╝   ██╔════╝╚════██╗   ██╔════╝        ",
-        "██║   ██║  ███████╗ ███████╗   ███████╗ █████╔╝   ███████╗        ",
-        "╚██╗ ██╔╝  ██╔═══██╗╚════██║   ╚════██║ ╚═══██╗   ╚════██║        ",
-        " ╚████╔╝██╗╚██████╔╝███████║██╗███████║██████╔╝██╗███████║        ",
-        "  ╚═══╝ ╚═╝ ╚═════╝ ╚══════╝╚═╝╚══════╝╚═════╝ ╚═╝╚══════╝        "
+    const char *ascii_art = R"(  
+		       .......                        
+		       +.....@..                      
+		       +.....@.                       
+		       .*...%.                        
+		     .++.   .:@.                      
+		    .%.        :=                     
+		    *.       ...% .....               
+		    #.      .@:......@.               
+		    .@.    .-*      .-*               
+		    .@.    .-*       -*               
+		    .@.  ...-*       -*               
+		    .@+@@@@@@@%:..   -*..             
+		  .:@@@@@%.. . ..+@:.-%@@-.           
+		  %@@@@*.  ..-=:....@@@@@@@.          
+		.%@@@@-    %@@%@-..@@@@@@@@@%.        
+		.@@@@%  .*@@@@@..@@@@@@@@@@@@@%.      
+	       :----+@@@@#===+=@%==.    .+@@@@.           
+		.%@@@@@@@@@@#..@@....   .@@@@%.           
+		  .%@@@@@@%.  .+@@@@%  .@@@@@.            
+		    .@@@%.:@.    .....%@@@@%.             
+		      :.   .:@%.#%%@@@@@@+.               
+			       ....::...                  
+
+       ____  ____                _____                  _    _______   
+      / __ \/ __/___ _____  ____/ /   |  ____  ____    | |  / /__  /   
+     / /_/ / /_/ __ `/ __ \/ __  / /| | / __ \/ __ \   | | / /  / /    
+    / ____/ __/ /_/ / / / / /_/ / ___ |/ /_/ / /_/ /   | |/ /  / /     
+   /_/   /_/  \__,_/_/ /_/\__,_/_/  |_/ .___/ .___/    |___/  /_/      
+                                     /_/   /_/                         
+    )";
+
+    // Split the raw string by lines
+    std::string line;
+    std::istringstream stream(ascii_art);
+    
+    while (std::getline(stream, line)) {
+        std::cout << GREEN << line << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Add delay between lines
     };
-
-    std::cout << "\n";
-    std::cout << "\033[1;32m"; // Green text color
-
-    // Printing the top of the box
-    std::cout << "╔════════════════════════════════════════════════════════════════════╗\n";
-
-    // Printing the ASCII art
-    for (const std::string& line : ascii_art) {
-        std::cout << "║ " << line << " ║\n";
-#ifdef _WIN32
-        Sleep(50);  // Slow down printing for retro effect
-#else
-        usleep(50000);  // Sleep for 50 milliseconds for retro effect
-#endif
-    }
-
-    // Printing the bottom of the box
-    std::cout << "╚════════════════════════════════════════════════════════════════════╝\n";
-    std::cout << "\033[0m"; // Reset text color to default
+    std::cout << RESETC;
 }
-
 
 int main(int argc, char *argv[]) {
     std::string full_work_dir;
@@ -144,6 +160,9 @@ int main(int argc, char *argv[]) {
         // Wait for the Python process to finish by checking if it's still running
         bool process_running = true;
         while (process_running) {
+
+//PROC _WIN32
+
 #ifdef _WIN32
             std::string check_command = "tasklist /FI \"PID eq " + std::to_string(pid) + "\"";
             FILE* pipe = _popen(check_command.c_str(), "r");
@@ -193,9 +212,11 @@ int main(int argc, char *argv[]) {
             print_stat("CPU Usage (%)", std::to_string(total_cpu / count));
 
             // Display Average RAM Usage (MiB)
+
 #ifdef _WIN32
             double total_mem_mib = total_mem / (1024 * 1024);  // Convert from bytes to MiB
             print_stat("Average RAM Usage", std::to_string(total_mem_mib) + " MiB");
+
 #else
             double total_mem_mib = total_mem / 1024.0;  // Convert from KiB to MiB
             print_stat("Average RAM Usage", std::to_string(total_mem_mib) + " MiB");
