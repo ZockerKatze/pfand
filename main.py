@@ -65,8 +65,8 @@ class PfandCalculator:
         try:
             # Use Flaschen icon for Bierflasche
             
-            #if product_name == "Bierflasche":
-            #   product_name = "Flaschen"
+            if product_name == "Bierflasche":
+               product_name = "Flaschen"
 
             # Use Can Icon for Monster as its the same
 
@@ -561,7 +561,8 @@ class PfandCalculator:
         ttk.Label(totals_frame, text=str(total_kasten), font=bold_font).grid(row=0, column=3, sticky='n', padx=5)
         ttk.Label(totals_frame, text=str(total_dose), font=bold_font).grid(row=0, column=4, sticky='n', padx=5)
         ttk.Label(totals_frame, text=str(total_plastik), font=bold_font).grid(row=0, column=5, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=f"€{total_amount:.2f}", font=bold_font).grid(row=0, column=6, sticky='e', padx=5)
+        ttk.Label(totals_frame, text=str(total_monster), font=bold_font).grid(row=0, column=6, sticky='n', padx=5)
+        ttk.Label(totals_frame, text=f"€{total_amount:.2f}", font=bold_font).grid(row=0, column=7, sticky='e', padx=5)
 
     def make_deposit(self):
         deposit_dialog = tk.Toplevel(self.root)
@@ -662,7 +663,7 @@ class PfandCalculator:
             with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile, delimiter=';')
                 
-                writer.writerow(['Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Gesamt (€)'])
+                writer.writerow(['Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Monster', 'Gesamt (€)'])
                 
                 for deposit in self.deposit_history:
                     writer.writerow([
@@ -672,6 +673,7 @@ class PfandCalculator:
                         deposit['quantities']['Kasten'],
                         deposit['quantities']['Dose'],
                         deposit['quantities']['Plastikflasche'],
+                        deposit['quantities']['Monster'],
                         f"{deposit['total']:.2f}"
                     ])
             

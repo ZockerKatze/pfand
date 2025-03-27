@@ -89,7 +89,7 @@ void print_ascii_art() {
     
     while (std::getline(stream, line)) {
         std::cout << GREEN << line << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Add delay between lines
+        std::this_thread::sleep_for(std::chrono::milliseconds(60)); // Add delay between lines
     };
     std::cout << RESETC;
 }
