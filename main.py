@@ -12,6 +12,7 @@ from pyzbar.pyzbar import decode
 import threading
 import queue
 import numpy as np
+import shutil
 
 class Achievement:
     def __init__(self, title, description, condition_type, condition_value):
@@ -27,16 +28,9 @@ class PfandCalculator:
         self.root = root
         self.root.title("Österreichischer Pfandrechner")
         
-        self.PRICES = {
-            "Flaschen": 0.25,
-            "Bierflasche": 0.20,
-            "Kasten": 3.00,
-            "Dose": 0.25,
-            "Plastikflasche": 0.25,
-            "Monster": 0.25,
-        }
-
-        self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche", "Monster"] ## maybe error bc 20er
+        # Load products and prices from JSON
+        self.load_products()
+        
         self.quantities = {}
         self.images = {}
         self.spinboxes = {}  # Store spinbox references
@@ -64,46 +58,50 @@ class PfandCalculator:
     def load_image(self, product_name):
         try:
             # Use Flaschen icon for Bierflasche
-            
             if product_name == "Bierflasche":
-               product_name = "Flaschen"
-
-            # Use Can Icon for Monster as its the same
-
-            #if product_name == "Monster":
-            #    product_name = "Dose"
+                product_name = "Flaschen"
                 
             image_path = f"images/{product_name.lower()}.png"
             if os.path.exists(image_path):
-                image = Image.open(image_path)
-                image = image.resize((100, 100), Image.Resampling.LANCZOS)
-                return ImageTk.PhotoImage(image)
+                try:
+                    image = Image.open(image_path)
+                    image = image.resize((100, 100), Image.Resampling.LANCZOS)
+                    return ImageTk.PhotoImage(image)
+                except Exception as e:
+                    print(f"Error processing image {image_path}: {e}")
+                    return None
             else:
+                print(f"Image not found: {image_path}")
                 return None
         except Exception as e:
-            print(f"Error loading {image_path}: {e}")
+            print(f"Error loading image for {product_name}: {e}")
             return None
     
     def load_achievement_image(self):
         try:
             image_path = "images/auszeichnung.png"
             if os.path.exists(image_path):
-                image = Image.open(image_path)
-                image = image.resize((50, 50), Image.Resampling.LANCZOS)
-                # Store both normal and gray versions
-                self.achievement_image = ImageTk.PhotoImage(image)
-                # Create grayscale version while preserving transparency
-                gray_image = Image.new('RGBA', image.size)
-                for x in range(image.width):
-                    for y in range(image.height):
-                        r, g, b, a = image.getpixel((x, y))
-                        # Convert to grayscale while preserving alpha
-                        gray = int(0.299 * r + 0.587 * g + 0.114 * b)
-                        # Make it lighter
-                        gray = min(255, gray + 100)
-                        gray_image.putpixel((x, y), (gray, gray, gray, a))
-                self.achievement_image_gray = ImageTk.PhotoImage(gray_image)
-                return self.achievement_image
+                try:
+                    image = Image.open(image_path)
+                    image = image.resize((50, 50), Image.Resampling.LANCZOS)
+                    # Store both normal and gray versions
+                    self.achievement_image = ImageTk.PhotoImage(image)
+                    # Create grayscale version while preserving transparency
+                    gray_image = Image.new('RGBA', image.size)
+                    for x in range(image.width):
+                        for y in range(image.height):
+                            r, g, b, a = image.getpixel((x, y))
+                            # Convert to grayscale while preserving alpha
+                            gray = int(0.299 * r + 0.587 * g + 0.114 * b)
+                            # Make it lighter
+                            gray = min(255, gray + 100)
+                            gray_image.putpixel((x, y), (gray, gray, gray, a))
+                    self.achievement_image_gray = ImageTk.PhotoImage(gray_image)
+                    return self.achievement_image
+                except Exception as e:
+                    print(f"Error processing achievement image: {e}")
+                    return None
+            print(f"Achievement image not found: {image_path}")
             return None
         except Exception as e:
             print(f"Error loading achievement image: {e}")
@@ -339,6 +337,8 @@ class PfandCalculator:
         file_menu.add_command(label="Ordner öffnen", command=self.open_file_location, accelerator="Strg+O")
         file_menu.add_command(label="Speicherdatei löschen", command=self.remove_save_file, accelerator="Strg+Shift+F1")
         file_menu.add_separator()
+        file_menu.add_command(label="Neulanden der UI", command=self.recreate_widgets, accelerator="Strg+R")
+        file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.root.quit, accelerator="Strg+Q")
 
         deposit_menu = tk.Menu(self.menubar, tearoff=0)
@@ -360,6 +360,12 @@ class PfandCalculator:
         achievements_menu.add_command(label="Auszeichnungen anzeigen", command=self.show_achievements, accelerator="Strg+F6")
         achievements_menu.add_command(label="Auszeichnungen löschen", command=self.delete_achievements, accelerator="Strg+F7")
 
+        # Add custom products menu
+        products_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Produkte", menu=products_menu)
+        products_menu.add_command(label="Produkt hinzufügen", command=self.show_add_product_window, accelerator="Strg+P")
+        products_menu.add_command(label="Produkte verwalten", command=self.show_manage_products_window, accelerator="Strg+Shift+P")
+
         self.root.bind('<Control-s>', lambda e: self.save_quantities())
         self.root.bind('<Control-o>', lambda e: self.open_file_location())
         self.root.bind('<Control-q>', lambda e: self.root.quit())
@@ -372,6 +378,9 @@ class PfandCalculator:
         self.root.bind('<Control-F6>', lambda e: self.show_achievements())
         self.root.bind('<Control-F7>', lambda e: self.delete_achievements())
         self.root.bind('<Control-E>', lambda e: self.export_barcodes_csv() if e.state & 0x1 else self.export_history_csv())
+        self.root.bind('<Control-p>', lambda e: self.show_add_product_window())
+        self.root.bind('<Control-P>', lambda e: self.show_manage_products_window() if e.state & 0x1 else self.show_add_product_window())
+        self.root.bind('<Control-r>', lambda e: self.recreate_widgets())
 
     def open_file_location(self):
         current_dir = os.getcwd()
@@ -411,9 +420,12 @@ class PfandCalculator:
             self.quantities = {product: 0 for product in self.products}
     
     def save_quantities(self):
-        with open('quantities.json', 'w') as f:
-            json.dump(self.quantities, f)
-        messagebox.showinfo("Erfolg", "Mengen wurden erfolgreich gespeichert!")
+        try:
+            with open('quantities.json', 'w') as f:
+                json.dump(self.quantities, f)
+            messagebox.showinfo("Erfolg", "Mengen wurden erfolgreich gespeichert!")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Fehler beim Speichern der Mengen: {str(e)}")
     
     def create_widgets(self):
         main_frame = ttk.Frame(self.root)
@@ -478,8 +490,11 @@ class PfandCalculator:
             return []
 
     def save_deposit_history(self):
-        with open('deposit_history.json', 'w') as f:
-            json.dump(self.deposit_history, f)
+        try:
+            with open('deposit_history.json', 'w') as f:
+                json.dump(self.deposit_history, f)
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Fehler beim Speichern der Historie: {str(e)}")
 
     def show_deposit_history(self):
         history_window = tk.Toplevel(self.root)
@@ -663,19 +678,17 @@ class PfandCalculator:
             with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile, delimiter=';')
                 
-                writer.writerow(['Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Monster', 'Gesamt (€)'])
+                # Create header with all products
+                header = ['Datum'] + self.products + ['Gesamt (€)']
+                writer.writerow(header)
                 
                 for deposit in self.deposit_history:
-                    writer.writerow([
-                        deposit['date'],
-                        deposit['quantities']['Flaschen'],
-                        deposit['quantities'].get('Bierflasche', 0),
-                        deposit['quantities']['Kasten'],
-                        deposit['quantities']['Dose'],
-                        deposit['quantities']['Plastikflasche'],
-                        deposit['quantities']['Monster'],
-                        f"{deposit['total']:.2f}"
-                    ])
+                    # Create row with all products
+                    row = [deposit['date']]
+                    for product in self.products:
+                        row.append(deposit['quantities'].get(product, 0))
+                    row.append(f"{deposit['total']:.2f}")
+                    writer.writerow(row)
             
             messagebox.showinfo("Erfolg", "Historie wurde erfolgreich exportiert!")
         except Exception as e:
@@ -795,8 +808,12 @@ class PfandCalculator:
     def close_scanner_window(self):
         if self.scanning:
             self.toggle_scanning()
-        self.scanner_window.destroy()
-        self.scanner_window = None
+        if self.cap:
+            self.cap.release()
+            self.cap = None
+        if self.scanner_window:
+            self.scanner_window.destroy()
+            self.scanner_window = None
 
     def toggle_scanning(self):
         if not self.scanning:
@@ -1022,29 +1039,28 @@ class PfandCalculator:
         self.save_quantities()  # This ensures we don't lose progress
 
     def update_ui(self):
-        print("Updating UI...")  # Debug print
-        
         def update_spinboxes():
-            # Update all spinboxes to match quantities
-            main_frame = self.root.winfo_children()[0]  # Get the main frame
-            for frame in main_frame.winfo_children():
-                if isinstance(frame, ttk.Frame):
-                    # Find the product this frame represents
-                    for widget in frame.winfo_children():
-                        if isinstance(widget, ttk.Label) and widget.cget('text') in self.products:
-                            product = widget.cget('text')
-                            current_qty = self.quantities.get(product, 0)
-                            print(f"Setting {product} spinbox to {current_qty}")  # Debug print
-                            # Find and update the spinbox
-                            for w in frame.winfo_children():
-                                if isinstance(w, ttk.Spinbox):
-                                    w.set(str(current_qty))
-                                    w.update()
-                                    break
-            
-            # Update the total
-            self.update_total()
-            print("UI update completed")  # Debug print
+            try:
+                # Update all spinboxes to match quantities
+                main_frame = self.root.winfo_children()[0]  # Get the main frame
+                for frame in main_frame.winfo_children():
+                    if isinstance(frame, ttk.Frame):
+                        # Find the product this frame represents
+                        for widget in frame.winfo_children():
+                            if isinstance(widget, ttk.Label) and widget.cget('text') in self.products:
+                                product = widget.cget('text')
+                                current_qty = self.quantities.get(product, 0)
+                                # Find and update the spinbox
+                                for w in frame.winfo_children():
+                                    if isinstance(w, ttk.Spinbox):
+                                        w.set(str(current_qty))
+                                        w.update()
+                                        break
+                
+                # Update the total
+                self.update_total()
+            except Exception as e:
+                print(f"Error updating UI: {e}")
         
         # Ensure updates happen in the main thread
         if threading.current_thread() is threading.main_thread():
@@ -1089,6 +1105,310 @@ class PfandCalculator:
             messagebox.showinfo("Erfolg", "Barcode Historie wurde erfolgreich exportiert!")
         except Exception as e:
             messagebox.showerror("Fehler", f"Fehler beim Exportieren: {str(e)}")
+
+    def load_products(self):
+        try:
+            with open('products.json', 'r') as f:
+                data = json.load(f)
+                self.products = data.get('products', [])
+                self.PRICES = data.get('prices', {})
+        except FileNotFoundError:
+            # Default products if no JSON exists
+            self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche", "Monster"]
+            self.PRICES = {
+                "Flaschen": 0.25,
+                "Bierflasche": 0.20,
+                "Kasten": 3.00,
+                "Dose": 0.25,
+                "Plastikflasche": 0.25,
+                "Monster": 0.25,
+            }
+            self.save_products()
+
+    def save_products(self):
+        try:
+            data = {
+                'products': self.products,
+                'prices': self.PRICES
+            }
+            with open('products.json', 'w') as f:
+                json.dump(data, f)
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Fehler beim Speichern der Produkte: {str(e)}")
+
+    def show_add_product_window(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Neues Produkt hinzufügen")
+        dialog.geometry("400x300")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Product name
+        name_frame = ttk.Frame(dialog)
+        name_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(name_frame, text="Produktname:").pack(side='left')
+        name_var = tk.StringVar()
+        name_entry = ttk.Entry(name_frame, textvariable=name_var)
+        name_entry.pack(side='left', fill='x', expand=True, padx=5)
+
+        # Deposit amount
+        deposit_frame = ttk.Frame(dialog)
+        deposit_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(deposit_frame, text="Pfandbetrag (€):").pack(side='left')
+        deposit_var = tk.StringVar()
+        deposit_entry = ttk.Entry(deposit_frame, textvariable=deposit_var)
+        deposit_entry.pack(side='left', fill='x', expand=True, padx=5)
+
+        # Image selection
+        image_frame = ttk.Frame(dialog)
+        image_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(image_frame, text="Bild:").pack(side='left')
+        image_path_var = tk.StringVar()
+        image_entry = ttk.Entry(image_frame, textvariable=image_path_var)
+        image_entry.pack(side='left', fill='x', expand=True, padx=5)
+        ttk.Button(image_frame, text="Durchsuchen", command=lambda: self.select_image(image_path_var)).pack(side='left')
+
+        def add_product():
+            name = name_var.get().strip()
+            try:
+                deposit = float(deposit_var.get().replace(',', '.'))
+            except ValueError:
+                messagebox.showerror("Fehler", "Bitte geben Sie einen gültigen Pfandbetrag ein.")
+                return
+
+            if not name:
+                messagebox.showerror("Fehler", "Bitte geben Sie einen Produktnamen ein.")
+                return
+
+            if name in self.products:
+                messagebox.showerror("Fehler", "Ein Produkt mit diesem Namen existiert bereits.")
+                return
+
+            image_path = image_path_var.get()
+            if image_path:
+                try:
+                    # Create images directory if it doesn't exist
+                    if not os.path.exists('images'):
+                        os.makedirs('images')
+
+                    # Copy and rename the image
+                    new_image_path = f"images/{name.lower()}.png"
+                    shutil.copy2(image_path, new_image_path)
+                except Exception as e:
+                    messagebox.showerror("Fehler", f"Fehler beim Kopieren des Bildes: {str(e)}")
+                    return
+
+            # Add the new product
+            self.products.append(name)
+            self.PRICES[name] = deposit
+            self.save_products()
+
+            # Update the UI
+            self.recreate_widgets()
+            dialog.destroy()
+
+        ttk.Button(dialog, text="Hinzufügen", command=add_product).pack(pady=10)
+
+    def select_image(self, image_path_var, preview_label=None):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("PNG files", "*.png"), ("All files", "*.*")]
+        )
+        if file_path:
+            image_path_var.set(file_path)
+            if preview_label:
+                try:
+                    image = Image.open(file_path)
+                    # Resize image to fit preview (100x100)
+                    image.thumbnail((100, 100), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(image)
+                    preview_label.configure(image=photo)
+                    preview_label.image = photo  # Keep a reference
+                except Exception as e:
+                    print(f"Error loading preview: {e}")
+
+    def show_manage_products_window(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Produkte verwalten")
+        dialog.geometry("1200x600")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Create main container with two columns
+        main_container = ttk.Frame(dialog)
+        main_container.pack(fill='both', expand=True, padx=10, pady=5)
+
+        # Left column for product list
+        left_frame = ttk.Frame(main_container)
+        left_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
+
+        # Right column for add/edit product
+        right_frame = ttk.LabelFrame(main_container, text="Produkt hinzufügen")
+        right_frame.pack(side='right', fill='both', expand=True, padx=(5, 0))
+
+        # Create treeview in left frame
+        tree = ttk.Treeview(left_frame, columns=('Name', 'Pfand'), show='headings')
+        tree.heading('Name', text='Name')
+        tree.heading('Pfand', text='Pfand (€)')
+        tree.pack(fill='both', expand=True)
+
+        # Add scrollbar for treeview
+        scrollbar = ttk.Scrollbar(left_frame, orient='vertical', command=tree.yview)
+        scrollbar.pack(side='right', fill='y')
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        # Populate treeview
+        for product in self.products:
+            tree.insert('', 'end', values=(product, f"{self.PRICES[product]:.2f}"))
+
+        # Add product form in right frame
+        # Product name
+        name_frame = ttk.Frame(right_frame)
+        name_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(name_frame, text="Produktname:").pack(side='left')
+        name_var = tk.StringVar()
+        name_entry = ttk.Entry(name_frame, textvariable=name_var)
+        name_entry.pack(side='left', fill='x', expand=True, padx=5)
+
+        # Deposit amount
+        deposit_frame = ttk.Frame(right_frame)
+        deposit_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(deposit_frame, text="Pfandbetrag (€):").pack(side='left')
+        deposit_var = tk.StringVar()
+        deposit_entry = ttk.Entry(deposit_frame, textvariable=deposit_var)
+        deposit_entry.pack(side='left', fill='x', expand=True, padx=5)
+
+        # Image selection with preview
+        image_frame = ttk.Frame(right_frame)
+        image_frame.pack(fill='x', padx=10, pady=5)
+        ttk.Label(image_frame, text="Bild:").pack(side='left')
+        image_path_var = tk.StringVar()
+        image_entry = ttk.Entry(image_frame, textvariable=image_path_var)
+        image_entry.pack(side='left', fill='x', expand=True, padx=5)
+        ttk.Button(image_frame, text="Durchsuchen", command=lambda: self.select_image(image_path_var, preview_label)).pack(side='left')
+
+        # Image preview
+        preview_frame = ttk.Frame(right_frame)
+        preview_frame.pack(fill='x', padx=10, pady=5)
+        preview_label = ttk.Label(preview_frame)
+        preview_label.pack()
+
+        def update_preview(image_path):
+            if image_path and os.path.exists(image_path):
+                try:
+                    image = Image.open(image_path)
+                    # Resize image to fit preview (100x100)
+                    image.thumbnail((100, 100), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(image)
+                    preview_label.configure(image=photo)
+                    preview_label.image = photo  # Keep a reference
+                except Exception as e:
+                    print(f"Error loading preview: {e}")
+
+        def select_image_with_preview(image_path_var, preview_label):
+            file_path = filedialog.askopenfilename(
+                filetypes=[("PNG files", "*.png"), ("All files", "*.*")]
+            )
+            if file_path:
+                image_path_var.set(file_path)
+                update_preview(file_path)
+
+        def add_product():
+            name = name_var.get().strip()
+            try:
+                deposit = float(deposit_var.get().replace(',', '.'))
+            except ValueError:
+                messagebox.showerror("Fehler", "Bitte geben Sie einen gültigen Pfandbetrag ein.")
+                return
+
+            if not name:
+                messagebox.showerror("Fehler", "Bitte geben Sie einen Produktnamen ein.")
+                return
+
+            if name in self.products:
+                messagebox.showerror("Fehler", "Ein Produkt mit diesem Namen existiert bereits.")
+                return
+
+            image_path = image_path_var.get()
+            if image_path:
+                try:
+                    # Create images directory if it doesn't exist
+                    if not os.path.exists('images'):
+                        os.makedirs('images')
+
+                    # Copy and rename the image
+                    new_image_path = f"images/{name.lower()}.png"
+                    shutil.copy2(image_path, new_image_path)
+                except Exception as e:
+                    messagebox.showerror("Fehler", f"Fehler beim Kopieren des Bildes: {str(e)}")
+                    return
+
+            # Add the new product
+            self.products.append(name)
+            self.PRICES[name] = deposit
+            self.save_products()
+
+            # Update treeview
+            tree.insert('', 'end', values=(name, f"{deposit:.2f}"))
+            tree.yview_moveto(1)  # Scroll to the bottom to show the new item
+
+            # Clear form
+            name_var.set("")
+            deposit_var.set("")
+            image_path_var.set("")
+            preview_label.configure(image='')
+
+            # Update the main window UI
+            self.recreate_widgets()
+
+        def delete_product():
+            selected = tree.selection()
+            if not selected:
+                messagebox.showwarning("Warnung", "Bitte wählen Sie ein Produkt aus.")
+                return
+
+            if messagebox.askyesno("Bestätigen", "Möchten Sie das ausgewählte Produkt wirklich löschen?"):
+                item = tree.item(selected[0])
+                product_name = item['values'][0]
+                
+                # Remove from lists
+                self.products.remove(product_name)
+                del self.PRICES[product_name]
+                
+                # Delete image if exists
+                image_path = f"images/{product_name.lower()}.png"
+                if os.path.exists(image_path):
+                    try:
+                        os.remove(image_path)
+                    except Exception as e:
+                        print(f"Fehler beim Löschen des Bildes: {e}")
+
+                # Save changes and update UI
+                self.save_products()
+                self.recreate_widgets()
+                dialog.destroy()
+
+        # Add buttons
+        button_frame = ttk.Frame(right_frame)
+        button_frame.pack(fill='x', padx=10, pady=10)
+        ttk.Button(button_frame, text="Hinzufügen", command=add_product).pack(side='left', padx=5)
+        ttk.Button(button_frame, text="Löschen", command=delete_product).pack(side='left', padx=5)
+
+        # Bind image selection to preview update
+        image_path_var.trace_add('write', lambda *args: update_preview(image_path_var.get()))
+
+    def recreate_widgets(self):
+        # Clear existing widgets
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
+        # Recreate menu
+        self.create_menu()
+        
+        # Reload quantities
+        self.load_quantities()
+        
+        # Recreate main widgets
+        self.create_widgets()
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -35,7 +35,6 @@ def get_pyinstaller_path():
 def check_required_files():
     log_message("Checking required files...")
     required_files = {
-        'run.py': "Main launcher file",
         'main.py': "Main application file",
         'images': "Images directory"
     }
@@ -83,7 +82,14 @@ def install_requirements():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
         
         # Install each package separately to better handle errors
-        packages = ["pyinstaller", "pillow", "tkcalendar"]
+        packages = [
+            "pyinstaller>=6.3.0",
+            "pillow>=10.0.0",
+            "tkcalendar>=2.1.0",
+            "opencv-python>=4.8.0",
+            "pyzbar>=0.1.9",
+            "numpy>=1.24.0"
+        ]
         for package in packages:
             log_message(f"Installing {package}...")
             try:
@@ -97,7 +103,7 @@ def install_requirements():
     except Exception as e:
         log_message(f"Error installing packages: {str(e)}")
         log_message("Please try installing packages manually using:")
-        log_message("pip install pyinstaller pillow tkcalendar")
+        log_message("pip install pyinstaller pillow tkcalendar opencv-python pyzbar numpy")
         raise
 
 def cleanup():
@@ -164,7 +170,16 @@ def build():
             '--onedir',
             '--clean',
             '--noconfirm',
-            '--log-level=INFO'  # Changed from DEBUG to INFO for clearer output
+            '--log-level=INFO',
+            '--hidden-import=PIL._tkinter_finder',
+            '--hidden-import=tkcalendar',
+            '--hidden-import=cv2',
+            '--hidden-import=pyzbar.pyzbar',
+            '--hidden-import=numpy',
+            '--collect-all=tkcalendar',
+            '--collect-all=opencv-python',
+            '--collect-all=pyzbar',
+            '--collect-all=numpy'
         ]
         
         # Add icon if available
@@ -179,7 +194,7 @@ def build():
             log_message("Added images directory to build command")
         
         # Add the main script
-        cmd.append('run.py')
+        cmd.append('main.py')  # Changed from run.py to main.py
         
         log_message("Running PyInstaller with command:")
         log_message(' '.join(cmd))
