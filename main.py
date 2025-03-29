@@ -1114,7 +1114,7 @@ class PfandCalculator:
                 self.PRICES = data.get('prices', {})
         except FileNotFoundError:
             # Default products if no JSON exists
-            self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche", "Monster"]
+            self.products = ["Flaschen", "Bierflasche", "Kasten", "Dose", "Plastikflasche", "Monster", "Joghurt Glas"]
             self.PRICES = {
                 "Flaschen": 0.25,
                 "Bierflasche": 0.20,
@@ -1122,6 +1122,7 @@ class PfandCalculator:
                 "Dose": 0.25,
                 "Plastikflasche": 0.25,
                 "Monster": 0.25,
+                "Joghurt Glas": 0.17,
             }
             self.save_products()
 
