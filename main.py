@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import json
+from wiki import main as WIKI
 from PIL import Image, ImageTk
 import os
 import subprocess
@@ -339,6 +340,7 @@ class PfandCalculator:
         file_menu.add_separator()
         file_menu.add_command(label="Neulanden der UI", command=self.recreate_widgets, accelerator="Strg+R")
         file_menu.add_separator()
+        file_menu.add_command(label="Öffne PfandListe", command=WIKI.select_file, accelerator="Strg+L")
         file_menu.add_command(label="Beenden", command=self.root.quit, accelerator="Strg+Q")
 
         deposit_menu = tk.Menu(self.menubar, tearoff=0)
@@ -380,6 +382,7 @@ class PfandCalculator:
         self.root.bind('<Control-E>', lambda e: self.export_barcodes_csv() if e.state & 0x1 else self.export_history_csv())
         self.root.bind('<Control-p>', lambda e: self.show_add_product_window())
         self.root.bind('<Control-P>', lambda e: self.show_manage_products_window() if e.state & 0x1 else self.show_add_product_window())
+        self.root.bind('<Control-l>', lambda e: WIKI.select_file())
         self.root.bind('<Control-r>', lambda e: self.recreate_widgets())
 
     def open_file_location(self):
