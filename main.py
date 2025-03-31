@@ -1,4 +1,6 @@
 import tkinter as tk
+from tgtg_orderchecker.main import start_tgtg
+from tgtg_orderchecker.setupkey import ask_for_tokens
 from tkinter import ttk, messagebox, filedialog
 import json
 from wiki import main as WIKI
@@ -327,6 +329,18 @@ class PfandCalculator:
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+    def create_credits(self):
+        about_window = tk.Toplevel(self.root)
+        about_window.title("Über Programm")
+
+        about_window.geometry("500x200")
+
+        label = tk.Label(about_window, text="PfandApp V.7.02.204\n Erstellt mit TKinter\nGroßen Dank an SPAR, HOFER\n\nSTRG+F12 Für TGTG-OC (KeyConfig -> STRG+F11!)", padx=10, pady=10)
+        label.pack(pady=30)
+
+        close_button = tk.Button(about_window, text="Close", command=about_window.destroy)
+        close_button.pack()
+
 
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
@@ -342,6 +356,8 @@ class PfandCalculator:
         file_menu.add_separator()
         file_menu.add_command(label="Öffne PfandListe", command=WIKI.select_file, accelerator="Strg+L")
         file_menu.add_command(label="Beenden", command=self.root.quit, accelerator="Strg+Q")
+        file_menu.add_separator()
+        file_menu.add_command(label="Über Programm", command=self.create_credits, accelerator="Strg+F10")
 
         deposit_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Pfand", menu=deposit_menu)
@@ -361,7 +377,7 @@ class PfandCalculator:
         self.menubar.add_cascade(label="Auszeichnungen", menu=achievements_menu)
         achievements_menu.add_command(label="Auszeichnungen anzeigen", command=self.show_achievements, accelerator="Strg+F6")
         achievements_menu.add_command(label="Auszeichnungen löschen", command=self.delete_achievements, accelerator="Strg+F7")
-
+        
         # Add custom products menu
         products_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Produkte", menu=products_menu)
@@ -379,6 +395,9 @@ class PfandCalculator:
         self.root.bind('<Control-F2>', lambda e: self.handle_shift_f2(e))
         self.root.bind('<Control-F6>', lambda e: self.show_achievements())
         self.root.bind('<Control-F7>', lambda e: self.delete_achievements())
+        self.root.bind('<Control-F12>', lambda e: start_tgtg(self.root))
+        self.root.bind('<Control-F11>', lambda e: ask_for_tokens())
+        self.root.bind('<Control-F10>', lambda e: self.create_credits())
         self.root.bind('<Control-E>', lambda e: self.export_barcodes_csv() if e.state & 0x1 else self.export_history_csv())
         self.root.bind('<Control-p>', lambda e: self.show_add_product_window())
         self.root.bind('<Control-P>', lambda e: self.show_manage_products_window() if e.state & 0x1 else self.show_add_product_window())
