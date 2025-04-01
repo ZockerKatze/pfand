@@ -1,4 +1,5 @@
 import tkinter as tk
+import webbrowser
 from tgtg_orderchecker.main import start_tgtg
 from tgtg_orderchecker.setupkey import ask_for_tokens
 from tkinter import ttk, messagebox, filedialog
@@ -330,18 +331,25 @@ class PfandCalculator:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
     def create_credits(self):
+        # Create Toplevel window
         about_window = tk.Toplevel(self.root)
         about_window.title("Über Programm")
-
         about_window.geometry("500x200")
 
-        label = tk.Label(about_window, text="PfandApp V.7.02.204\n Erstellt mit TKinter\nGroßen Dank an SPAR, HOFER\n\nSTRG+F12 Für TGTG-OC (KeyConfig -> STRG+F11!)", padx=10, pady=10)
-        label.pack(pady=30)
+        # Label for "About" window
+        label = tk.Label(about_window, text=f"PfandApp V.7.02.205\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTGAPI, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nSTRG+F12 Für TGTG-OC (KeyConfig -> STRG+F11!)", padx=10, pady=10)
+        label.grid(row=0, column=0, columnspan=2, pady=10)  # Use grid here
 
+        # Close button in about window
         close_button = tk.Button(about_window, text="Close", command=about_window.destroy)
-        close_button.pack()
+        close_button.grid(row=1, column=1, padx=10, pady=10)
 
-
+        # URL for the website
+        url = "https://zockerkatze.github.io/ZockerKatze/"
+        
+        # Website button in about window
+        website_button = tk.Button(about_window, text="WebSite", command=lambda: webbrowser.open(url))
+        website_button.grid(row=1, column=0, padx=10, pady=10)    
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
