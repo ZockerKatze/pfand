@@ -1,210 +1,132 @@
 # Pfandrechner Application Suite
 
-A comprehensive application for managing deposit (Pfand) calculations with a modern GUI and build utilities.
+A comprehensive application suite designed to manage and calculate deposits ("Pfand") for various containers within the Austrian deposit refund system. The suite offers a modern graphical user interface (GUI) and includes utilities for building and managing the application.
 
-## 🗂️ Project Structure
+## Project Overview
 
-### Core Application (`main.py`)
-The main application for deposit calculations featuring:
-- 💰 Deposit calculation for various container types
-- 🏆 Achievement system with unlockable rewards
-- 📊 Deposit history tracking and export
-- 💾 Data persistence and management
-- 🖼️ Image support for containers and achievements
-- 🌟 Modern tkinter-based GUI
+The Pfandrechner Application Suite provides tools to:
 
-Key Features:
-- Real-time deposit calculations
-- Achievement system with multiple tiers
-- History tracking with CSV export
-- Automatic data saving
-- Image management system
-- Keyboard shortcuts for common actions
+- **Calculate Deposits:** Accurately compute deposit values for different container types.
+- **Track Achievements:** Unlock rewards based on deposit activities.
+- **Maintain History:** Record deposit transactions and export them for analysis.
+- **Manage Data:** Ensure data persistence and efficient management.
+- **Support Images:** Integrate images for containers and achievements to enhance user experience.
+- **TooGoodToGo Integration:** A simple window to check active orders from TooGoodToGo.
+- **API Key Management:** A window to set and save API details to a `key.py` file.
 
-### Build Utility (`buildutil/`)
-A suite of tools for building, managing, and deploying the application.
+## Features
 
-#### GUI Interface (`buildutil/gui.py`)
-Modern graphical interface for build management:
-- 🎨 Professional UI with Light/Dark themes
-- 🔄 Real-time build monitoring
-- 📝 Log management system
-- ⌨️ Keyboard shortcuts
-- 🛠️ Build and clean operations
-- 💡 Enhanced tooltips
+- **Real-time Deposit Calculations:** Instantly compute deposit values as containers are added.
+- **Achievement System:** Unlock various tiers of rewards based on deposit milestones.
+- **History Tracking:** Maintain a log of all deposit transactions with options to export in CSV format.
+- **Automatic Data Saving:** Ensure all data is saved without manual intervention.
+- **Image Management:** Associate images with containers and achievements for better visualization.
+- **Keyboard Shortcuts:** Utilize shortcuts for common actions to enhance usability.
 
-Shortcuts:
-- `Ctrl+B` - Build executable
-- `Ctrl+C` - Clean repository
-- `Ctrl+S` - Save log
-- `Ctrl+L` - Clear log
-- `Ctrl+T` - Toggle theme
+## Functionality of `main.py`
 
-#### Build Script (`buildutil/build.py`)
-Handles the creation of executables:
-- 📦 PyInstaller integration
-- 🔄 Automatic dependency management
-- 📁 Resource bundling
-- 📝 Build logging
-- ⚠️ Error handling
-- 🧹 Build cleanup
+The `main.py` file serves as the core of the Pfandrechner Application Suite, orchestrating various functionalities to provide a comprehensive user experience. Key functionalities include:
 
-Features:
-- Automatic package installation
-- Resource management
-- Cross-platform support
-- Build verification
-- Progress reporting
+- **Graphical User Interface (GUI) Initialization:** Sets up and launches the main application window, providing users with an intuitive interface to interact with the application's features.
+- **Deposit Calculation:** Enables users to input various container types and quantities, automatically computing the total deposit value based on predefined rates.
+- **Achievement Tracking:** Monitors user activities related to deposit returns and unlocks achievements when specific milestones are reached, enhancing user engagement.
+- **History Management:** Maintains a detailed log of all deposit transactions, allowing users to review past activities and export records for external analysis.
+- **Data Persistence:** Ensures that all user data, including transaction history and achievements, are saved and reloaded upon subsequent application launches, preventing data loss.
+- **Image Integration:** Displays relevant images for different container types and achievements within the GUI, providing a visually enriched user experience.
+- **Keyboard Shortcuts:** Implements various keyboard shortcuts to facilitate quick access to common functions, improving overall usability and efficiency.
 
-#### Cleanup Utility (`buildutil/clean.py`)
-Manages repository cleanliness:
-- 🧹 Build artifact removal
-- 🗑️ Cache cleanup
-- 🔍 Pattern matching
-- 🎨 Colored output
-- ✅ Safe operations
+## Project Structure
 
-Capabilities:
-- Intelligent cleanup
-- Safe file handling
-- Progress feedback
-- Dry-run support
+The repository is organized as follows:
 
-## 🚀 Getting Started
+- `main.py`: The main application script that launches the Pfandrechner GUI.
+- `pfand_scanner.py`: Module responsible for scanning and identifying container types.
+- `buildutil/`: Directory containing utilities for building and packaging the application.
+- `images/`: Folder storing images associated with containers and achievements.
+- `tgtg_orderchecker/`: Module for checking orders, related to the "Too Good To Go" initiative.
+- `wiki/`: Documentation and resources related to the project.
+- `.gitignore`: Specifies files and directories to be ignored by Git.
+- `LICENSE`: The MIT license governing the use of this project.
+- `README.md`: This document providing an overview of the project.
+- `requirements.txt`: Lists the Python dependencies required to run the application.
+- `launch.cpp`: A C++ script, that monitors usage of RAM & CPU (mainly to debug)
+- `key.py`: A file where API details for the TooGoodToGo integration are stored.
 
-### Prerequisites
-- Python 3.x
-- Required packages:
-  ```
-  tkinter
-  pillow
-  tkcalendar
-  pyinstaller
-  ```
+## Installation
 
-### Installation
-1. Clone the repository:
+To set up the Pfandrechner Application Suite:
+
+1. **Clone the Repository:**
+
    ```bash
-   git clone https://github.com/ZockerKatze/pfand
-   cd pfandrechner
+   git clone https://github.com/ZockerKatze/pfand.git
    ```
 
-2. Install dependencies:
+2. **Navigate to the Project Directory:**
+
+   ```bash
+   cd pfand
+   ```
+
+3. **Create and Activate a Virtual Environment (Recommended):**
+
+   On Windows:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+   On macOS/Linux:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+4. **Install Dependencies:**
+
+   Ensure you have Python installed. Then, install the required Python packages:
+
    ```bash
    pip install -r requirements.txt
    ```
 
-### Usage
+5. **Run the Application:**
 
-#### Running the Application
-```bash
-python main.py
-=======
-git clone https://github.com/ZockerKatze/pfand.git
-cd pfand
-```
+   Launch the main application:
 
-#### Building the Executable
-1. Using the GUI:
    ```bash
-   python buildutil/gui.py
+   python main.py
    ```
 
-2. Using command line:
-   ```bash
-   python buildutil/build.py
-   ```
+## Usage
 
-#### Cleaning the Repository
-1. Using the GUI:
-   - Launch the build utility
-   - Click "Clean Repository" or use `Ctrl+C`
+Upon running `main.py`, the GUI will be displayed, allowing users to:
 
-2. Using command line:
-   ```bash
-   python buildutil/clean.py
-   ```
+- Add containers and calculate their deposit values.
+- View and unlock achievements based on deposit milestones.
+- Track deposit history and export records as needed.
+- Check active orders from TooGoodToGo.
+- Set API keys via the dedicated settings window. (TGTG)
 
-## 🎨 Themes and Styling / For buildutil
+## Application Screenshot
 
-### Light Theme
-```
-Background: #ffffff
-Text: #2c3e50
-Buttons: #3498db
-Accents: #34495e
-Success: #2ecc71
-Error: #e74c3c
-```
+![Pfandrechner GUI](./iex.png)
 
-### Dark Theme
-```
-Background: #2c3e50
-Text: #ecf0f1
-Buttons: #3498db
-Accents: #95a5a6
-Success: #27ae60
-Error: #c0392b
-```
+## Contributing
 
-## 🔄 File Interactions
+Contributions to the Pfandrechner Application Suite are welcome. To contribute:
 
-### Application Flow
-1. `main.py` - Core application
-   - Handles user interface
-   - Manages data
-   - Processes calculations
-   - Tracks achievements
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Commit your changes with descriptive messages.
+4. Push your branch and create a pull request.
 
-2. `buildutil/gui.py` - Build interface
-   - Coordinates build operations
-   - Manages cleaning operations
-   - Handles logging
-   - Provides user feedback
+Please ensure adherence to the project's coding standards and include relevant documentation with your contributions.
 
-3. `buildutil/build.py` - Build operations
-   - Creates executable
-   - Manages dependencies
-   - Bundles resources
-   - Handles errors
+## License
 
-4. `buildutil/clean.py` - Cleanup operations
-   - Removes build artifacts
-   - Cleans caches
-   - Maintains repository
+This project is licensed under the MIT License. For more details, refer to the `LICENSE` file in the repository.
 
-## 🛠️ Development
+---
 
-### Code Structure
-- Modern Python practices
-- Object-oriented design
-- Event-driven architecture
-- Thread-safe operations
-- Error handling
-- Resource management
-
-### Best Practices
-- Consistent error handling
-- Professional logging
-- Safe file operations
-- Cross-platform compatibility
-- User-centric design
-- Clean code principles
-
-
-### Version Control
-- Regular commits
-- Feature branches
-- Version tagging
-- Change logging
-
-## 📝 License
-MIT
-=======
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments 👏
-
-- Thanks to all contributors and users of the application
-- Icons and images used in this project 
+*Note: This README is based on the current structure and available information from the repository. For the latest updates and detailed documentation, please refer to the project's wiki or contact the repository maintainers.*
 
