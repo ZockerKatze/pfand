@@ -337,7 +337,7 @@ class PfandCalculator:
         about_window.geometry("500x200")
 
         # Label for "About" window
-        label = tk.Label(about_window, text=f"PfandApp V.7.02.205\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTGAPI, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nSTRG+F12 Für TGTG-OC (KeyConfig -> STRG+F11!)", padx=10, pady=10)
+        label = tk.Label(about_window, text=f"PfandApp V.7.02.206\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTGAPI, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nSTRG+F12 Für TGTG-OC (KeyConfig -> STRG+F11!)", padx=10, pady=10)
         label.grid(row=0, column=0, columnspan=2, pady=10)  # Use grid here
 
         # Close button in about window

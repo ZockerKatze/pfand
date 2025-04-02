@@ -83,12 +83,13 @@ def install_requirements():
         
         # Install each package separately to better handle errors
         packages = [
-            "pyinstaller>=6.3.0",
-            "pillow>=10.0.0",
-            "tkcalendar>=2.1.0",
-            "opencv-python>=4.8.0",
-            "pyzbar>=0.1.9",
-            "numpy>=1.24.0"
+            "pyinstaller",
+            "pillow",
+            "opencv-python",
+            "pyzbar",
+            "numpy",
+            "tkcalendar",
+            "requests"
         ]
         for package in packages:
             log_message(f"Installing {package}...")

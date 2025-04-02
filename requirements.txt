@@ -1,5 +1,6 @@
-Pillow>=10.0.0
-tkcalendar>=2.1.0
-opencv-python>=4.8.0
-pyzbar>=0.1.9
-numpy>=1.24.0 
+Pillow
+requests
+tkcalendar
+opencv-python
+pyzbar
+numpy 
