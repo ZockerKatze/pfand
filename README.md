@@ -1,4 +1,6 @@
-# Pfandrechner Application Suite
+# Pfandrechner Application
+
+%% Version 7.02.207 %%
 
 A comprehensive application suite designed to manage and calculate deposits ("Pfand") for various containers within the Austrian deposit refund system. The suite offers a modern graphical user interface (GUI) and includes utilities for building and managing the application.
 
