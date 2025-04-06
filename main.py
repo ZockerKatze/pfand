@@ -350,6 +350,25 @@ class PfandCalculator:
         # Website button in about window
         website_button = tk.Button(about_window, text="WebSite", command=lambda: webbrowser.open(url))
         website_button.grid(row=1, column=0, padx=10, pady=10)    
+
+    # Credits for the TGTG-App
+    def TGTG_credits(self):
+        about_tgtg = tk.Toplevel(self.root)
+        about_tgtg.title("Über TGTG-OrderChecker")
+        about_tgtg.geometry("450x140")
+        
+        label_TGTG = tk.Label(about_tgtg, text="TooGoodToGo OrderChecker\n Originalerweiße https://github.com/ZockerKatze/tgtg_orderchecker\n V1.102.202 (PfandVersion)")
+
+        label_TGTG.grid(row=0, column=0, columnspan=2, pady=10)
+
+        close_button = tk.Button(about_tgtg, text="Close", command=about_tgtg.destroy)
+        close_button.grid(row=1, column=1, padx=10, pady=10)
+
+        url_TGTG="https://github.com/ZockerKatze/tgtg_orderchecker"
+
+        website_button_TGTG = tk.Button(about_tgtg, text="View Repo In Browser", command= lambda: webbrowser.open(url_TGTG))
+        website_button_TGTG.grid(row=1, column=0, padx=10, pady=10)
+
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
@@ -391,6 +410,13 @@ class PfandCalculator:
         self.menubar.add_cascade(label="Produkte", menu=products_menu)
         products_menu.add_command(label="Produkt hinzufügen", command=self.show_add_product_window, accelerator="Strg+P")
         products_menu.add_command(label="Produkte verwalten", command=self.show_manage_products_window, accelerator="Strg+Shift+P")
+
+        tgtg_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="TGTG", menu=tgtg_menu)
+        tgtg_menu.add_command(label="Öffne TGTG-OrderChecker", command=start_tgtg, accelerator="Strg+F12")
+        tgtg_menu.add_command(label="Öffne API-TokenTool", command=ask_for_tokens, accelerator="Strg+F11")
+        tgtg_menu.add_separator()
+        tgtg_menu.add_command(label="Über TGTG", command=self.TGTG_credits) # No keybind needed here, who tf is trying to access this via Keyboard?
 
         self.root.bind('<Control-s>', lambda e: self.save_quantities())
         self.root.bind('<Control-o>', lambda e: self.open_file_location())
