@@ -5,6 +5,7 @@ from tgtg_orderchecker.setupkey import ask_for_tokens
 from tkinter import ttk, messagebox, filedialog
 import json
 from wiki import main as WIKI
+from updater import open_updater as open_updater
 from PIL import Image, ImageTk
 import os
 import subprocess
@@ -337,7 +338,7 @@ class PfandCalculator:
         about_window.geometry("500x200")
 
         # Label for "About" window
-        label = tk.Label(about_window, text=f"PfandApp V.7.03.000\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nDanke für die Idee --> Österreich", padx=10, pady=10)
+        label = tk.Label(about_window, text=f"PfandApp V.7.04.000\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nDanke für die Idee --> Österreich", padx=10, pady=10)
         label.grid(row=0, column=0, columnspan=2, pady=10)  # Use grid here
 
         # Close button in about window
@@ -418,6 +419,10 @@ class PfandCalculator:
         tgtg_menu.add_separator()
         tgtg_menu.add_command(label="Über TGTG", command=self.TGTG_credits) # No keybind needed here, who tf is trying to access this via Keyboard?
 
+        update_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Updater", menu=update_menu)
+        update_menu.add_command(label="Öffne Updater", command=open_updater, accelerator="Strg+U") # Version (7.4.000 Updater Version)
+
         self.root.bind('<Control-s>', lambda e: self.save_quantities())
         self.root.bind('<Control-o>', lambda e: self.open_file_location())
         self.root.bind('<Control-q>', lambda e: self.root.quit())
@@ -437,6 +442,7 @@ class PfandCalculator:
         self.root.bind('<Control-P>', lambda e: self.show_manage_products_window() if e.state & 0x1 else self.show_add_product_window())
         self.root.bind('<Control-l>', lambda e: WIKI.select_file())
         self.root.bind('<Control-r>', lambda e: self.recreate_widgets())
+        self.root.bind('<Control-u>', lambda e: open_updater()) # New Update Feature (Version 7.4.000 UPDATER)
 
     def open_file_location(self):
         current_dir = os.getcwd()
