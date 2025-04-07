@@ -331,44 +331,97 @@ class PfandCalculator:
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+    # Credit Section (Overall made nicer in Version 7.04.001)
+
     def create_credits(self):
-        # Create Toplevel window
         about_window = tk.Toplevel(self.root)
         about_window.title("Über Programm")
-        about_window.geometry("500x200")
+        about_window.resizable(True, True)
 
-        # Label for "About" window
-        label = tk.Label(about_window, text=f"PfandApp V.7.04.000\nErstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\nGroßen Dank an SPAR, HOFER\n\nDanke für die Idee --> Österreich", padx=10, pady=10)
-        label.grid(row=0, column=0, columnspan=2, pady=10)  # Use grid here
+        # Configure grid weights so widgets expand properly | This is some new Stuff!
+        about_window.grid_columnconfigure(0, weight=1)
+        about_window.grid_columnconfigure(1, weight=1)
+        about_window.grid_rowconfigure(0, weight=1)
 
-        # Close button in about window
-        close_button = tk.Button(about_window, text="Close", command=about_window.destroy)
-        close_button.grid(row=1, column=1, padx=10, pady=10)
+        label = tk.Label(about_window,
+                         text=(
+                             "PfandApp V.7.04.001\n"
+                             "Erstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\n"
+                             "Eigene Module: Updater, TGTG_OC, Wiki, BuildUtil\n"
+                             "Großen Dank an SPAR, HOFER\n"
+                             "Danke für die Idee --> Österreich"
+                         ),
+                         padx=10,
+                         pady=10,
+                         justify="center", 
+                         anchor="center")
+        label.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew")
 
-        # URL for the website
         url = "https://zockerkatze.github.io/ZockerKatze/"
         
-        # Website button in about window
+        # Website button
         website_button = tk.Button(about_window, text="WebSite", command=lambda: webbrowser.open(url))
-        website_button.grid(row=1, column=0, padx=10, pady=10)    
+        website_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
-    # Credits for the TGTG-App
+        # Close button
+        close_button = tk.Button(about_window, text="Close", command=about_window.destroy)
+        close_button.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+
+    # Credits for the TGTG-App | Changed V7.04.001
     def TGTG_credits(self):
         about_tgtg = tk.Toplevel(self.root)
         about_tgtg.title("Über TGTG-OrderChecker")
-        about_tgtg.geometry("450x140")
-        
-        label_TGTG = tk.Label(about_tgtg, text="TooGoodToGo OrderChecker\n Originalerweiße https://github.com/ZockerKatze/tgtg_orderchecker\n V1.102.202 (PfandVersion)")
+        about_tgtg.resizable(True, True)
+        about_tgtg.grid_columnconfigure(0, weight=1)
+        about_tgtg.grid_columnconfigure(1, weight=1)
+        about_tgtg.grid_rowconfigure(0, weight=1)
 
-        label_TGTG.grid(row=0, column=0, columnspan=2, pady=10)
+        label_TGTG = tk.Label(
+            about_tgtg,
+            text="TooGoodToGo OrderChecker\nOriginalerweiße: https://github.com/ZockerKatze/tgtg_orderchecker\nV1.102.202 (PfandVersion)",
+            padx=10,
+            pady=10,
+            justify="center",
+            anchor="center"
+        )
+        label_TGTG.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew")
 
+        url_TGTG = "https://github.com/ZockerKatze/tgtg_orderchecker"
+
+        # Website button
+        website_button_TGTG = tk.Button(about_tgtg, text="View Repo In Browser", command=lambda: webbrowser.open(url_TGTG))
+        website_button_TGTG.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+
+        # Close button
         close_button = tk.Button(about_tgtg, text="Close", command=about_tgtg.destroy)
-        close_button.grid(row=1, column=1, padx=10, pady=10)
+        close_button.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
-        url_TGTG="https://github.com/ZockerKatze/tgtg_orderchecker"
+    def update_credits(self): # Credits for the Updater Application (not some update function for some credits)
+        about_update = tk.Toplevel(self.root)
+        about_update.title("Über UpdaterApp")
+        about_update.geometry("650x190")
+        about_update.grid_columnconfigure(0, weight=1) # Use weights here cause its cleaner?
 
-        website_button_TGTG = tk.Button(about_tgtg, text="View Repo In Browser", command= lambda: webbrowser.open(url_TGTG))
-        website_button_TGTG.grid(row=1, column=0, padx=10, pady=10)
+        # Why this Formatting now? idk it looks nice :3 and I dont need newline's (\n)
+
+        label_update_app = tk.Label(
+                about_update, 
+                text=
+                """
+                Updater App für PfandApp
+                Version 1.000.000
+                Diese Updater App nutzt das GitHub Repository um die App zu updaten
+                Nach Updates sollte die App neugestartet (oder Reloaded) werden
+                """
+                )
+
+        label_update_app.grid(row=0, column=0, columnspan=2, pady=10)
+
+        # Close Button
+
+        close_button = tk.Button(about_update, text="Close", command=about_update.destroy)
+        close_button.grid(row=1, column=0, pady=10, sticky='ew') # Use the Weights and make it stick to the bottom~ <- Just like you :3 fkn gayass
 
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
@@ -422,6 +475,8 @@ class PfandCalculator:
         update_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Updater", menu=update_menu)
         update_menu.add_command(label="Öffne Updater", command=open_updater, accelerator="Strg+U") # Version (7.4.000 Updater Version)
+        update_menu.add_separator()
+        update_menu.add_command(label="Über Updater", command=self.update_credits) # Also no keybind here, same reason as the tgtg one #V7.4.001
 
         self.root.bind('<Control-s>', lambda e: self.save_quantities())
         self.root.bind('<Control-o>', lambda e: self.open_file_location())

@@ -10,6 +10,8 @@ import tempfile
 
 GITHUB_REPO_ZIP = "https://github.com/ZockerKatze/pfand/archive/refs/heads/main.zip"
 
+IGNORED_FILES = {"key.py"}
+
 class GitHubUpdater(tk.Toplevel):
     def __init__(self, master=None):
         super().__init__(master)
@@ -27,7 +29,7 @@ class GitHubUpdater(tk.Toplevel):
         self.check_for_updates()
 
     def _build_ui(self):
-        header = tk.Label(self, text="Pfand-Updater", font=("Helvetica", 18, "bold"), bg="#f0f2f5")
+        header = tk.Label(self, text="PfandUpdater", font=("Helvetica", 18, "bold"), bg="#f0f2f5")
         header.pack(pady=(20, 5))
 
         self.status_label = tk.Label(self, text="Suche nach Updates...", font=("Helvetica", 12), bg="#f0f2f5")
@@ -57,7 +59,7 @@ class GitHubUpdater(tk.Toplevel):
         self.back_button.pack(pady=(0, 5))
         self.back_button.pack_forget()
 
-        self.update_button = ttk.Button(self, text="Dateien aktualisieren", command=self.perform_update, state='disabled')
+        self.update_button = ttk.Button(self, text="Dateien aktualisieren (Updaten)", command=self.perform_update, state='disabled')
         self.update_button.pack(pady=10)
 
     def show_root_view(self):
@@ -109,6 +111,8 @@ class GitHubUpdater(tk.Toplevel):
         differences = []
         for root, _, files in os.walk(src_dir):
             for file in files:
+                if file in IGNORED_FILES:
+                    continue
                 src_path = os.path.join(root, file)
                 rel_path = os.path.relpath(src_path, src_dir)
                 dest_path = os.path.join(dest_dir, rel_path)
@@ -162,3 +166,4 @@ def open_updater():
     root.withdraw()
     updater = GitHubUpdater(root)
     updater.mainloop()
+
