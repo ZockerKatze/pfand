@@ -1,6 +1,6 @@
 # Pfandrechner Application
 
-%% Version 7.02.207 %%
+_**Version 7.04.001**_ 
 
 A comprehensive application suite designed to manage and calculate deposits ("Pfand") for various containers within the Austrian deposit refund system. The suite offers a modern graphical user interface (GUI) and includes utilities for building and managing the application.
 
@@ -12,6 +12,7 @@ The Pfandrechner Application Suite provides tools to:
 - **Track Achievements:** Unlock rewards based on deposit activities.
 - **Maintain History:** Record deposit transactions and export them for analysis.
 - **Manage Data:** Ensure data persistence and efficient management.
+- **Now new! The Updater** This is a Function to keep up to date with the GitHub Repo! (the UI needs to be reloaded for changes to appear!)
 - **Support Images:** Integrate images for containers and achievements to enhance user experience.
 - **TooGoodToGo Integration:** A simple window to check active orders from TooGoodToGo.
 - **API Key Management:** A window to set and save API details to a `key.py` file.
@@ -53,6 +54,7 @@ The repository is organized as follows:
 - `requirements.txt`: Lists the Python dependencies required to run the application.
 - `launch.cpp`: A C++ script, that monitors usage of RAM & CPU (mainly to debug)
 - `key.py`: A file where API details for the TooGoodToGo integration are stored.
+- `update.py`: A file which Updates based on the GitHub Repository (excludes the KeyFile)
 
 ## Installation
 

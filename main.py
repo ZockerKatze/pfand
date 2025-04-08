@@ -434,6 +434,7 @@ class PfandCalculator:
         file_menu.add_command(label="Speicherdatei löschen", command=self.remove_save_file, accelerator="Strg+Shift+F1")
         file_menu.add_separator()
         file_menu.add_command(label="Neulanden der UI", command=self.recreate_widgets, accelerator="Strg+R")
+        file_menu.add_command(label="Updater", command=open_updater, accelerator="Strg+U") # Added this to the File Menu too!
         file_menu.add_separator()
         file_menu.add_command(label="Öffne PfandListe", command=WIKI.select_file, accelerator="Strg+L")
         file_menu.add_command(label="Beenden", command=self.root.quit, accelerator="Strg+Q")

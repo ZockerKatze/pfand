@@ -159,7 +159,7 @@ class GitHubUpdater(tk.Toplevel):
                 messagebox.showinfo("Aktualisierung abgeschlossen", "Dateien wurden erfolgreich aktualisiert.")
                 self.destroy()
         except Exception as e:
-            messagebox.showerror("Aktualisierung fehlgeschlagen", str(e))
+            messagebox.showerror("Aktualisierung fehlgeschlagen!", str(e))
 
 def open_updater():
     root = tk.Tk()
