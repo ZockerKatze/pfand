@@ -9,44 +9,56 @@ import shutil
 import tempfile
 
 GITHUB_REPO_ZIP = "https://github.com/ZockerKatze/pfand/archive/refs/heads/main.zip"
-
 IGNORED_FILES = {"key.py"}
 
 class GitHubUpdater(tk.Toplevel):
     def __init__(self, master=None):
         super().__init__(master)
-        self.title("PfandUpdater")
-        self.geometry("700x550")
-        self.resizable(False, False)
-        self.configure(bg="#f0f2f5")
+        self.title("🔄 Pfand Updater")
+        self.geometry("800x600")
+        self.configure(bg="#ffffff")
 
         self.local_dir = os.getcwd()
         self.file_differences = []
         self.structure = {}
         self.current_view = "root"
 
+        self._setup_style()
         self._build_ui()
         self.check_for_updates()
 
+    # Setup the styling for the UI
+    def _setup_style(self):
+        style = ttk.Style(self)
+        style.theme_use('clam')
+
+        style.configure("TLabel", font=("Segoe UI", 11), background="#ffffff")
+        style.configure("TButton", font=("Segoe UI", 10), padding=6, relief="flat", borderwidth=0)
+        style.map("TButton", background=[("active", "#e0e0e0")])
+
+        style.configure("Header.TLabel", font=("Segoe UI", 20, "bold"), background="#ffffff", foreground="#333")
+        style.configure("Status.TLabel", font=("Segoe UI", 12), background="#ffffff", foreground="#555")
+
+        style.configure("Treeview", font=("Segoe UI", 10))
+        style.configure("TFrame", background="#ffffff")
+
     def _build_ui(self):
-        header = tk.Label(self, text="PfandUpdater", font=("Helvetica", 18, "bold"), bg="#f0f2f5")
+        header = ttk.Label(self, text="Pfand Updater", style="Header.TLabel")
         header.pack(pady=(20, 5))
 
-        self.status_label = tk.Label(self, text="Suche nach Updates...", font=("Helvetica", 12), bg="#f0f2f5")
+        self.status_label = ttk.Label(self, text="🔍 Suche nach Updates...", style="Status.TLabel")
         self.status_label.pack(pady=(0, 10))
 
         self.frame = ttk.Frame(self)
         self.frame.pack(expand=True, fill="both", padx=20, pady=10)
 
-        self.canvas = tk.Canvas(self.frame, bg="white")
+        self.canvas = tk.Canvas(self.frame, bg="#fafafa", bd=0, highlightthickness=0)
         self.scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
 
         self.scrollable_frame.bind(
             "<Configure>",
-            lambda e: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            )
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
 
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
@@ -55,12 +67,15 @@ class GitHubUpdater(tk.Toplevel):
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        self.back_button = ttk.Button(self, text="Zurück", command=self.show_root_view)
-        self.back_button.pack(pady=(0, 5))
+        button_frame = ttk.Frame(self)
+        button_frame.pack(pady=15)
+
+        self.back_button = ttk.Button(button_frame, text="⬅️ Zurück", command=self.show_root_view)
+        self.back_button.pack(side="left", padx=10)
         self.back_button.pack_forget()
 
-        self.update_button = ttk.Button(self, text="Dateien aktualisieren (Updaten)", command=self.perform_update, state='disabled')
-        self.update_button.pack(pady=10)
+        self.update_button = ttk.Button(button_frame, text="⬆️ Dateien aktualisieren", command=self.perform_update, state='disabled')
+        self.update_button.pack(side="left", padx=10)
 
     def show_root_view(self):
         self.current_view = "root"
@@ -71,15 +86,15 @@ class GitHubUpdater(tk.Toplevel):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
-        for name, content in struct.items():
+        for name, content in sorted(struct.items()):
             full_path = os.path.join(parent_path, name)
             if isinstance(content, dict):
                 btn = ttk.Button(self.scrollable_frame, text=f"📁 {name}", command=lambda p=full_path: self.open_folder(p))
             else:
                 btn = ttk.Button(self.scrollable_frame, text=f"📄 {name}")
-            btn.pack(fill="x", padx=10, pady=5)
+            btn.pack(fill="x", padx=20, pady=6, anchor="w")
 
-    def open_folder(self, folder_path):
+    def open_folder(self, folder_path): # open current folder_path
         self.current_view = folder_path
         self.back_button.pack()
         parts = folder_path.split(os.sep)
@@ -98,14 +113,15 @@ class GitHubUpdater(tk.Toplevel):
                 self.file_differences = self.compare_directories(extracted_path, self.local_dir)
 
                 if self.file_differences:
-                    self.status_label.config(text="⚠️ Updates verfügbar", fg="red")
+                    self.status_label.config(text="⚠️ Updates verfügbar", foreground="#e53935") # Say that you need to update
                     self.structure = self.build_structure(self.file_differences)
                     self.display_structure(self.structure)
                     self.update_button.config(state='normal')
                 else:
-                    self.status_label.config(text="✅ Alle Dateien sind aktuell", fg="green")
+                    # Show a Indicator that tells you everything is fine.
+                    self.status_label.config(text="✅ Alles ist aktuell", foreground="#43a047")
         except Exception as e:
-            self.status_label.config(text=f"Fehler: {e}", fg="red")
+            self.status_label.config(text=f"❌ Fehler: {e}", foreground="#e53935") # if theres something then assert
 
     def compare_directories(self, src_dir, dest_dir):
         differences = []
@@ -152,18 +168,18 @@ class GitHubUpdater(tk.Toplevel):
                 for rel_path in self.file_differences:
                     src_path = os.path.join(extracted_path, rel_path)
                     dest_path = os.path.join(self.local_dir, rel_path)
-
                     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                     shutil.copy2(src_path, dest_path)
-
-                messagebox.showinfo("Aktualisierung abgeschlossen", "Dateien wurden erfolgreich aktualisiert.")
+                
+                # Show Info to indicate it updated successfully , else ;(
+                messagebox.showinfo("✅ Aktualisiert", "Dateien wurden erfolgreich aktualisiert.")
                 self.destroy()
         except Exception as e:
-            messagebox.showerror("Aktualisierung fehlgeschlagen!", str(e))
+            messagebox.showerror("❌ Fehler", str(e))
 
+# Actually open UI to update (call this function when imported)
 def open_updater():
     root = tk.Tk()
     root.withdraw()
     updater = GitHubUpdater(root)
     updater.mainloop()
-
