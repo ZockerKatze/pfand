@@ -27,7 +27,6 @@ class GitHubUpdater(tk.Toplevel):
         self._build_ui()
         self.check_for_updates()
 
-    # Setup the styling for the UI
     def _setup_style(self):
         style = ttk.Style(self)
         style.theme_use('clam')
@@ -94,7 +93,7 @@ class GitHubUpdater(tk.Toplevel):
                 btn = ttk.Button(self.scrollable_frame, text=f"📄 {name}")
             btn.pack(fill="x", padx=20, pady=6, anchor="w")
 
-    def open_folder(self, folder_path): # open current folder_path
+    def open_folder(self, folder_path):
         self.current_view = folder_path
         self.back_button.pack()
         parts = folder_path.split(os.sep)
@@ -113,15 +112,14 @@ class GitHubUpdater(tk.Toplevel):
                 self.file_differences = self.compare_directories(extracted_path, self.local_dir)
 
                 if self.file_differences:
-                    self.status_label.config(text="⚠️ Updates verfügbar", foreground="#e53935") # Say that you need to update
+                    self.status_label.config(text="⚠️ Updates verfügbar", foreground="#e53935")
                     self.structure = self.build_structure(self.file_differences)
                     self.display_structure(self.structure)
                     self.update_button.config(state='normal')
                 else:
-                    # Show a Indicator that tells you everything is fine.
                     self.status_label.config(text="✅ Alles ist aktuell", foreground="#43a047")
         except Exception as e:
-            self.status_label.config(text=f"❌ Fehler: {e}", foreground="#e53935") # if theres something then assert
+            self.status_label.config(text=f"❌ Fehler: {e}", foreground="#e53935")
 
     def compare_directories(self, src_dir, dest_dir):
         differences = []
@@ -170,14 +168,55 @@ class GitHubUpdater(tk.Toplevel):
                     dest_path = os.path.join(self.local_dir, rel_path)
                     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                     shutil.copy2(src_path, dest_path)
-                
-                # Show Info to indicate it updated successfully , else ;(
+
                 messagebox.showinfo("✅ Aktualisiert", "Dateien wurden erfolgreich aktualisiert.")
                 self.destroy()
         except Exception as e:
             messagebox.showerror("❌ Fehler", str(e))
 
-# Actually open UI to update (call this function when imported)
+    @staticmethod
+    def files_match_static(file1, file2):
+        def hash_file(filepath):
+            hash_md5 = hashlib.md5()
+            with open(filepath, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            return hash_md5.hexdigest()
+        return hash_file(file1) == hash_file(file2)
+
+# This Function changes the entire UI (this stays with the reload), I really dont know why this occurs.
+# Hopefully will be changed in the Future
+def run_silent_update(master=None):
+    try:
+        response = requests.get(GITHUB_REPO_ZIP)
+        with ZipFile(io.BytesIO(response.content)) as zip_file:
+            temp_dir = tempfile.mkdtemp()
+            zip_file.extractall(temp_dir)
+            extracted_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+
+            file_differences = []
+            for root_dir, _, files in os.walk(extracted_path):
+                for file in files:
+                    if file in IGNORED_FILES:
+                        continue
+                    src_path = os.path.join(root_dir, file)
+                    rel_path = os.path.relpath(src_path, extracted_path)
+                    dest_path = os.path.join(os.getcwd(), rel_path)
+
+                    if not os.path.exists(dest_path) or not GitHubUpdater.files_match_static(src_path, dest_path):
+                        file_differences.append(rel_path)
+
+            if file_differences:
+                result = messagebox.askyesno("🔄 Update verfügbar", "Es sind Updates verfügbar. Möchten Sie aktualisieren?")
+                if result:
+                    updater = GitHubUpdater(master)
+                    updater.grab_set()
+            else:
+                print("Keine Updates verfügbar.")
+
+    except Exception as e:
+        print(f"Update-Check-Fehler: {e}")
+
 def open_updater():
     root = tk.Tk()
     root.withdraw()

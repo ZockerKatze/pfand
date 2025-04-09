@@ -1,11 +1,12 @@
 import tkinter as tk
+import tkinter
 import webbrowser
 from tgtg_orderchecker.main import start_tgtg
 from tgtg_orderchecker.setupkey import ask_for_tokens
 from tkinter import ttk, messagebox, filedialog
 import json
 from wiki import main as WIKI
-from updater import open_updater as open_updater
+from updater import open_updater as open_updater, run_silent_update
 from PIL import Image, ImageTk
 import os
 import subprocess
@@ -332,7 +333,7 @@ class PfandCalculator:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-    # Credit Section (Overall made nicer in Version 7.04.001)
+    # Credit Section (Overall made nicer in Version 7.04.001) || Changed up a bit in V7.04.101
 
     def create_credits(self):
         about_window = tk.Toplevel(self.root)
@@ -346,7 +347,7 @@ class PfandCalculator:
 
         label = tk.Label(about_window,
                          text=(
-                             "PfandApp V.7.04.001\n"
+                             "PfandApp V.7.04.101\n"
                              "Erstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\n"
                              "Eigene Module: Updater, TGTG_OC, Wiki, BuildUtil\n"
                              "Großen Dank an SPAR, HOFER\n"
@@ -397,36 +398,39 @@ class PfandCalculator:
         close_button = tk.Button(about_tgtg, text="Close", command=about_tgtg.destroy)
         close_button.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
-    def update_credits(self): # Credits for the Updater Application (not some update function for some credits)
+    def update_credits(self): # Credits for the Updater Application (not some update function for some credits) || Rewrote this in Version 7.04.101 => Inconsistency is key
         about_update = tk.Toplevel(self.root)
         about_update.title("Über UpdaterApp")
         about_update.geometry("650x190")
-        about_update.grid_columnconfigure(0, weight=1) # Use weights here cause its cleaner?
 
-        # Why this Formatting now? idk it looks nice :3 and I dont need newline's (\n)
+        about_update.grid_columnconfigure(0, weight=1)  # horizont
+        about_update.grid_rowconfigure(0, weight=1)     # vertically
+        about_update.grid_rowconfigure(1, weight=0)     # tight :3 (OwO)
 
+        # Text content
         label_update_app = tk.Label(
-                about_update, 
-                text=
-                """
-                Updater App für PfandApp
-                Version 1.000.000
-                Diese Updater App nutzt das GitHub Repository um die App zu updaten
-                Nach Updates sollte die App neugestartet (oder Reloaded) werden
-                """
-                )
+            about_update,
+            text=(
+                "Updater App für PfandApp\n"
+                "Version 1.100.000\n"
+                "Diese Updater App nutzt das GitHub Repository, um die App zu updaten.\n"
+                "Nach Updates sollte die App neugestartet (oder reloaded, bei UI) werden.\n"
+                "Beim Starten der App wird nach Updates gesucht!"
+            ),
+            justify="left", anchor="center"
+        )
+        label_update_app.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
 
-        label_update_app.grid(row=0, column=0, columnspan=2, pady=10)
-
-        # Close Button
-
+        # Close button at the bottom (like u) :3
         close_button = tk.Button(about_update, text="Close", command=about_update.destroy)
-        close_button.grid(row=1, column=0, pady=10, sticky='ew') # Use the Weights and make it stick to the bottom~ <- Just like you :3 fkn gayass
-
+        close_button.grid(row=1, column=0, sticky='ew', padx=10, pady=(0, 10))
+        
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
         
+        # "Datei" Menu
+
         file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Datei", menu=file_menu)
         file_menu.add_command(label="Speichern", command=self.save_quantities, accelerator="Strg+S")
@@ -441,6 +445,8 @@ class PfandCalculator:
         file_menu.add_separator()
         file_menu.add_command(label="Über Programm", command=self.create_credits, accelerator="Strg+F10")
 
+        # Deposit Menu
+
         deposit_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Pfand", menu=deposit_menu)
         deposit_menu.add_command(label="Pfand Abgeben", command=self.quick_deposit, accelerator="Strg+D")
@@ -449,11 +455,15 @@ class PfandCalculator:
         deposit_menu.add_command(label="Historie Exportieren (CSV)", command=self.export_history_csv, accelerator="Strg+E")
         deposit_menu.add_command(label="Historie Löschen", command=self.clear_deposit_history, accelerator="Strg+Shift+F2")
 
+        # Scanner Menu
+
         scanner_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Scanner", menu=scanner_menu)
         scanner_menu.add_command(label="Scanner öffnen", command=self.open_scanner_window, accelerator="Strg+B")
         scanner_menu.add_separator()
         scanner_menu.add_command(label="Barcodes Exportieren (CSV)", command=self.export_barcodes_csv, accelerator="Strg+Shift+E")
+
+        # Achivements Menu
 
         achievements_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Auszeichnungen", menu=achievements_menu)
@@ -461,10 +471,13 @@ class PfandCalculator:
         achievements_menu.add_command(label="Auszeichnungen löschen", command=self.delete_achievements, accelerator="Strg+F7")
         
         # Add custom products menu
+
         products_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Produkte", menu=products_menu)
         products_menu.add_command(label="Produkt hinzufügen", command=self.show_add_product_window, accelerator="Strg+P")
         products_menu.add_command(label="Produkte verwalten", command=self.show_manage_products_window, accelerator="Strg+Shift+P")
+
+        # TGTG Menu
 
         tgtg_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="TGTG", menu=tgtg_menu)
@@ -473,11 +486,15 @@ class PfandCalculator:
         tgtg_menu.add_separator()
         tgtg_menu.add_command(label="Über TGTG", command=self.TGTG_credits) # No keybind needed here, who tf is trying to access this via Keyboard?
 
+        # Update Menu
+
         update_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Updater", menu=update_menu)
         update_menu.add_command(label="Öffne Updater", command=open_updater, accelerator="Strg+U") # Version (7.4.000 Updater Version)
         update_menu.add_separator()
         update_menu.add_command(label="Über Updater", command=self.update_credits) # Also no keybind here, same reason as the tgtg one #V7.4.001
+
+        # Manage Keybinds
 
         self.root.bind('<Control-s>', lambda e: self.save_quantities())
         self.root.bind('<Control-o>', lambda e: self.open_file_location())
@@ -614,35 +631,35 @@ class PfandCalculator:
         except Exception as e:
             messagebox.showerror("Fehler", f"Fehler beim Speichern der Historie: {str(e)}")
 
+    # Changed in Version 7.4.101
     def show_deposit_history(self):
+        try:
+            with open("deposit_history.json", "r", encoding="utf-8") as file:
+                deposit_history = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print("error while loading file")
+            return
+
         history_window = tk.Toplevel(self.root)
         history_window.title("Pfand Abgabe Historie")
-        history_window.geometry("700x400")
+        history_window.geometry("900x500")
 
         main_frame = ttk.Frame(history_window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Define Which Type of Product is in the Window (Tree)
+        all_items = set()
+        for deposit in deposit_history:
+            all_items.update(deposit['quantities'].keys())
 
-        tree = ttk.Treeview(main_frame, columns=('Datum', 'Flaschen', 'Bierflasche', 'Kasten', 'Dose', 'Plastikflasche', 'Monster', 'Gesamt'), show='headings')
-        
-        tree.heading('Datum', text='Datum', anchor='center')
-        tree.heading('Flaschen', text='Flaschen', anchor='center')
-        tree.heading('Bierflasche', text='Bierflasche', anchor='center')
-        tree.heading('Kasten', text='Kasten', anchor='center')
-        tree.heading('Dose', text='Dose', anchor='center')
-        tree.heading('Plastikflasche', text='Plastikflasche', anchor='center')
-        tree.heading("Monster", text="Monster", anchor="center")
-        tree.heading('Gesamt', text='Gesamt (€)', anchor='center')
+        item_columns = sorted(all_items)
+        columns = ['Datum'] + item_columns + ['Gesamt']
 
-        tree.column('Datum', width=100, anchor='center')
-        tree.column('Flaschen', width=70, anchor='center')
-        tree.column('Bierflasche', width=70, anchor='center')
-        tree.column('Kasten', width=70, anchor='center')
-        tree.column('Dose', width=70, anchor='center')
-        tree.column('Plastikflasche', width=100, anchor='center')
-        tree.column("Monster", width=70, anchor="center")
-        tree.column('Gesamt', width=80, anchor='e')
+        tree = ttk.Treeview(main_frame, columns=columns, show='headings')
+
+        for col in columns:
+            tree.heading(col, text=col, anchor='center')
+            width = 100 if col == 'Datum' else 80
+            tree.column(col, width=width, anchor='center' if col != 'Gesamt' else 'e')
 
         scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=tree.yview)
         tree.configure(yscrollcommand=scrollbar.set)
@@ -653,49 +670,37 @@ class PfandCalculator:
         main_frame.grid_columnconfigure(0, weight=1)
         main_frame.grid_rowconfigure(0, weight=1)
 
-        total_flaschen = sum(deposit['quantities']['Flaschen'] for deposit in self.deposit_history)
-        total_bierflasche = sum(deposit['quantities'].get('Bierflasche', 0) for deposit in self.deposit_history)
-        total_kasten = sum(deposit['quantities']['Kasten'] for deposit in self.deposit_history)
-        total_dose = sum(deposit['quantities']['Dose'] for deposit in self.deposit_history)
-        total_plastik = sum(deposit['quantities']['Plastikflasche'] for deposit in self.deposit_history)
-        total_monster = sum(deposit["quantities"]["Monster"] for deposit in self.deposit_history)
-        total_amount = sum(deposit['total'] for deposit in self.deposit_history)
+        totals = {item: 0 for item in item_columns}
+        total_amount = 0
 
-        for deposit in self.deposit_history:
-            tree.insert('', tk.END, values=(
-                deposit['date'],
-                deposit['quantities']['Flaschen'],
-                deposit['quantities'].get('Bierflasche', 0),
-                deposit['quantities']['Kasten'],
-                deposit['quantities']['Dose'],
-                deposit['quantities']['Plastikflasche'],
-                deposit["quantities"]["Monster"],
-                f"{deposit['total']:.2f}"
-            ))
+        for deposit in deposit_history:
+            quantities = deposit.get('quantities', {})
+            row = [deposit.get('date', '')]
+            for item in item_columns:
+                count = quantities.get(item, 0)
+                row.append(count)
+                totals[item] += count
+            amount = deposit.get('total', 0.0)
+            row.append(f"{amount:.2f}")
+            total_amount += amount
+            tree.insert('', tk.END, values=row)
 
         totals_frame = ttk.Frame(main_frame)
         totals_frame.grid(row=1, column=0, sticky='ew', pady=(5, 0))
-
-        totals_frame.grid_columnconfigure(0, minsize=100)  # Datum
-        totals_frame.grid_columnconfigure(1, minsize=70)   # Flaschen
-        totals_frame.grid_columnconfigure(2, minsize=70)   # Bierflasche
-        totals_frame.grid_columnconfigure(3, minsize=70)   # Kasten
-        totals_frame.grid_columnconfigure(4, minsize=70)   # Dose
-        totals_frame.grid_columnconfigure(5, minsize=100)  # Plastikflasche
-        totals_frame.grid_columnconfigure(6, minsize=80)   # Gesamt
 
         separator = ttk.Separator(main_frame, orient='horizontal')
         separator.grid(row=2, column=0, sticky='ew', pady=2)
 
         bold_font = ('TkDefaultFont', 9, 'bold')
-        ttk.Label(totals_frame, text="Gesamt:", font=bold_font).grid(row=0, column=0, sticky='w', padx=5)
-        ttk.Label(totals_frame, text=str(total_flaschen), font=bold_font).grid(row=0, column=1, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_bierflasche), font=bold_font).grid(row=0, column=2, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_kasten), font=bold_font).grid(row=0, column=3, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_dose), font=bold_font).grid(row=0, column=4, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_plastik), font=bold_font).grid(row=0, column=5, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=str(total_monster), font=bold_font).grid(row=0, column=6, sticky='n', padx=5)
-        ttk.Label(totals_frame, text=f"€{total_amount:.2f}", font=bold_font).grid(row=0, column=7, sticky='e', padx=5)
+
+        row = ["Gesamt:"]
+        for item in item_columns:
+            row.append(f"{totals[item]} {item}")  
+        row.append(f"€{total_amount:.2f}")  
+        for idx, value in enumerate(row):
+            ttk.Label(totals_frame, text=value, font=bold_font).grid(row=0, column=idx, sticky='w', padx=5)
+
+        separator.grid(row=3, column=0, sticky='ew', pady=5)
 
     def make_deposit(self):
         deposit_dialog = tk.Toplevel(self.root)
@@ -1532,4 +1537,5 @@ class PfandCalculator:
 if __name__ == "__main__":
     root = tk.Tk()
     app = PfandCalculator(root)
+    root.after(1, run_silent_update) # Run uc on start (1s delay) => updater.py module || UNCOMMENT IN PROD
     root.mainloop()
