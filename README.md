@@ -21,7 +21,7 @@ The Pfandrechner Application Suite provides tools to:
 
 - **Real-time Deposit Calculations:** Instantly compute deposit values as containers are added.
 - **Achievement System:** Unlock various tiers of rewards based on deposit milestones.
-- **History Tracking:** Maintain a log of all deposit transactions with options to export in CSV format.
+- **History Tracking:** Maintain a log of all deposit transactions with options to export in CSV format. (/ IMPROVED in Version 7.04.001 \)
 - **Automatic Data Saving:** Ensure all data is saved without manual intervention.
 - **Image Management:** Associate images with containers and achievements for better visualization.
 - **Keyboard Shortcuts:** Utilize shortcuts for common actions to enhance usability.
