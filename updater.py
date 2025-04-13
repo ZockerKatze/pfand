@@ -7,6 +7,8 @@ from zipfile import ZipFile
 import io
 import shutil
 import tempfile
+import traceback
+import threading
 
 GITHUB_REPO_ZIP = "https://github.com/ZockerKatze/pfand/archive/refs/heads/main.zip"
 IGNORED_FILES = {"key.py"}
@@ -25,7 +27,9 @@ class GitHubUpdater(tk.Toplevel):
 
         self._setup_style()
         self._build_ui()
-        self.check_for_updates()
+
+        # Run update check in background
+        threading.Thread(target=self.check_for_updates, daemon=True).start()
 
     def _setup_style(self):
         style = ttk.Style(self)
@@ -76,6 +80,24 @@ class GitHubUpdater(tk.Toplevel):
         self.update_button = ttk.Button(button_frame, text="⬆️ Dateien aktualisieren", command=self.perform_update, state='disabled')
         self.update_button.pack(side="left", padx=10)
 
+        self.toggle_debug_btn = ttk.Button(self, text="🐞 Fehlerdetails anzeigen", command=self.toggle_debug_output)
+        self.toggle_debug_btn.pack()
+        self.toggle_debug_btn.pack_forget()
+
+        self.debug_output = tk.Text(self, height=8, bg="#f5f5f5", font=("Courier", 9))
+        self.debug_output.pack(fill="x", padx=20, pady=(0, 10))
+        self.debug_output.pack_forget()
+        self.debug_visible = False
+
+    def toggle_debug_output(self):
+        self.debug_visible = not self.debug_visible
+        if self.debug_visible:
+            self.debug_output.pack()
+            self.toggle_debug_btn.config(text="🔽 Fehlerdetails verbergen")
+        else:
+            self.debug_output.pack_forget()
+            self.toggle_debug_btn.config(text="🐞 Fehlerdetails anzeigen")
+
     def show_root_view(self):
         self.current_view = "root"
         self.back_button.pack_forget()
@@ -87,11 +109,10 @@ class GitHubUpdater(tk.Toplevel):
 
         for name, content in sorted(struct.items()):
             full_path = os.path.join(parent_path, name)
+            lbl = ttk.Label(self.scrollable_frame, text=f"📁 {name}" if isinstance(content, dict) else f"📄 {name}", style="TLabel")
             if isinstance(content, dict):
-                btn = ttk.Button(self.scrollable_frame, text=f"📁 {name}", command=lambda p=full_path: self.open_folder(p))
-            else:
-                btn = ttk.Button(self.scrollable_frame, text=f"📄 {name}")
-            btn.pack(fill="x", padx=20, pady=6, anchor="w")
+                lbl.bind("<Double-Button-1>", lambda e, p=full_path: self.open_folder(p))
+            lbl.pack(fill="x", padx=20, pady=6, anchor="w")
 
     def open_folder(self, folder_path):
         self.current_view = folder_path
@@ -104,6 +125,9 @@ class GitHubUpdater(tk.Toplevel):
 
     def check_for_updates(self):
         try:
+            self.status_label.config(text="⬇️ Lade Update herunter...", foreground="#ffb300")
+            self.update_idletasks()
+
             response = requests.get(GITHUB_REPO_ZIP)
             with ZipFile(io.BytesIO(response.content)) as zip_file:
                 temp_dir = tempfile.mkdtemp()
@@ -112,14 +136,16 @@ class GitHubUpdater(tk.Toplevel):
                 self.file_differences = self.compare_directories(extracted_path, self.local_dir)
 
                 if self.file_differences:
-                    self.status_label.config(text="⚠️ Updates verfügbar", foreground="#e53935")
                     self.structure = self.build_structure(self.file_differences)
+                    self.status_label.config(text="⚠️ Updates verfügbar", foreground="#e53935")
                     self.display_structure(self.structure)
                     self.update_button.config(state='normal')
                 else:
                     self.status_label.config(text="✅ Alles ist aktuell", foreground="#43a047")
-        except Exception as e:
-            self.status_label.config(text=f"❌ Fehler: {e}", foreground="#e53935")
+        except Exception:
+            self.status_label.config(text="❌ Fehler beim Laden", foreground="#e53935")
+            self.toggle_debug_btn.pack()
+            self.debug_output.insert("1.0", traceback.format_exc())
 
     def compare_directories(self, src_dir, dest_dir):
         differences = []
@@ -156,6 +182,10 @@ class GitHubUpdater(tk.Toplevel):
         return hash_md5.hexdigest()
 
     def perform_update(self):
+        self.update_button.config(state='disabled')
+        self.status_label.config(text="🚧 Update läuft...", foreground="#fb8c00")
+        self.update_idletasks()
+
         try:
             response = requests.get(GITHUB_REPO_ZIP)
             with ZipFile(io.BytesIO(response.content)) as zip_file:
@@ -173,6 +203,8 @@ class GitHubUpdater(tk.Toplevel):
                 self.destroy()
         except Exception as e:
             messagebox.showerror("❌ Fehler", str(e))
+            self.toggle_debug_btn.pack()
+            self.debug_output.insert("1.0", traceback.format_exc())
 
     @staticmethod
     def files_match_static(file1, file2):
@@ -184,8 +216,7 @@ class GitHubUpdater(tk.Toplevel):
             return hash_md5.hexdigest()
         return hash_file(file1) == hash_file(file2)
 
-# This Function changes the entire UI (this stays with the reload), I really dont know why this occurs.
-# Hopefully will be changed in the Future
+
 def run_silent_update(master=None):
     try:
         response = requests.get(GITHUB_REPO_ZIP)
@@ -213,9 +244,9 @@ def run_silent_update(master=None):
                     updater.grab_set()
             else:
                 print("Keine Updates verfügbar.")
-
     except Exception as e:
         print(f"Update-Check-Fehler: {e}")
+
 
 def open_updater():
     root = tk.Tk()

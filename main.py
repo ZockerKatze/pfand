@@ -347,7 +347,7 @@ class PfandCalculator:
 
         label = tk.Label(about_window,
                          text=(
-                             "PfandApp V.7.04.101\n"
+                             "PfandApp V.7.04.201\n"
                              "Erstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\n"
                              "Eigene Module: Updater, TGTG_OC, Wiki, BuildUtil\n"
                              "Großen Dank an SPAR, HOFER\n"
@@ -412,7 +412,7 @@ class PfandCalculator:
             about_update,
             text=(
                 "Updater App für PfandApp\n"
-                "Version 1.100.000\n"
+                "Version 1.200.000\n"
                 "Diese Updater App nutzt das GitHub Repository, um die App zu updaten.\n"
                 "Nach Updates sollte die App neugestartet (oder reloaded, bei UI) werden.\n"
                 "Beim Starten der App wird nach Updates gesucht!"
