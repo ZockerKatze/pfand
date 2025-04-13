@@ -6,6 +6,7 @@ from tgtg_orderchecker.setupkey import ask_for_tokens
 from tkinter import ttk, messagebox, filedialog
 import json
 from wiki import main as WIKI
+from pfand_scanner import launch_pfand_scanner
 from updater import open_updater as open_updater, run_silent_update
 from PIL import Image, ImageTk
 import os
@@ -347,7 +348,7 @@ class PfandCalculator:
 
         label = tk.Label(about_window,
                          text=(
-                             "PfandApp V.7.04.201\n"
+                             "PfandApp V.7.04.301\n"
                              "Erstellt mit TKinter, CV2, Numpy, PyZbar, TGTG-API, TKCalendar, Datetime\n"
                              "Eigene Module: Updater, TGTG_OC, Wiki, BuildUtil\n"
                              "Großen Dank an SPAR, HOFER\n"
@@ -424,7 +425,31 @@ class PfandCalculator:
         # Close button at the bottom (like u) :3
         close_button = tk.Button(about_update, text="Close", command=about_update.destroy)
         close_button.grid(row=1, column=0, sticky='ew', padx=10, pady=(0, 10))
+    
+    def µScan_credits(self):
+        about_µScan = tk.Toplevel(self.root)
+        about_μScan.title("Über µScan")
+        about_μScan.geometry("650x190")
+
+        about_μScan.grid_columnconfigure(0, weight=1)
+        about_μScan.grid_rowconfigure(0, weight=1)
+        about_μScan.grid_rowconfigure(1, weight=0)
+
+        label_µScan_app = tk.Label(
+                about_μScan,
+                text=(
+                    "µScan - Der bessere Barcode Scanner\n"
+                    "Version 1.1.0\n"
+                    "µScan erfordert einen UI Reload (Strg+R) in der Root Anwendung\n"
+                    "µScan ist für mehrere Barcodes gemacht, die in einer kurzen Zeit gescannt werden sollten\n"
+                    ),
+                    justify="left", anchor="center"
+                )
+        label_μScan_app.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         
+        close_button = tk.Button(about_µScan, text="Close", command=about_μScan.destroy)
+        close_button.grid(row=1, column=0, sticky='ew', padx=10, pady=(0, 10))
+ 
     def create_menu(self):
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
@@ -460,6 +485,9 @@ class PfandCalculator:
         scanner_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Scanner", menu=scanner_menu)
         scanner_menu.add_command(label="Scanner öffnen", command=self.open_scanner_window, accelerator="Strg+B")
+        scanner_menu.add_separator()
+        scanner_menu.add_command(label="Öffne µScan", command=launch_pfand_scanner, accelerator="Strg+Shift+B") #µScan
+        scanner_menu.add_command(label="Über µScan", command=self.µScan_credits) #µScan credits
         scanner_menu.add_separator()
         scanner_menu.add_command(label="Barcodes Exportieren (CSV)", command=self.export_barcodes_csv, accelerator="Strg+Shift+E")
 
@@ -503,6 +531,7 @@ class PfandCalculator:
         self.root.bind('<Control-h>', lambda e: self.show_deposit_history())
         self.root.bind('<Control-e>', lambda e: self.export_history_csv())
         self.root.bind('<Control-b>', lambda e: self.open_scanner_window())
+        self.root.bind('<Control-Shift-B>', lambda e: launch_pfand_scanner()) #µScan
         self.root.bind('<Control-F1>', lambda e: self.handle_shift_f1(e))
         self.root.bind('<Control-F2>', lambda e: self.handle_shift_f2(e))
         self.root.bind('<Control-F6>', lambda e: self.show_achievements())
@@ -1537,5 +1566,5 @@ class PfandCalculator:
 if __name__ == "__main__":
     root = tk.Tk()
     app = PfandCalculator(root)
-    root.after(1, run_silent_update) # Run uc on start (1s delay) => updater.py module || UNCOMMENT IN PROD
+    #root.after(1, run_silent_update) # Run uc on start (1s delay) => updater.py module || UNCOMMENT IN PROD
     root.mainloop()
