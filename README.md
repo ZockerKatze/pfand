@@ -1,136 +1,72 @@
-# Pfandrechner Application
+# ♻️ Pfandrechner Application Suite
 
-_**Version 7.04.001**_ 
+**Version:** V.7.04.301  
+**License:** [MIT](LICENSE)
 
-A comprehensive application suite designed to manage and calculate deposits ("Pfand") for various containers within the Austrian deposit refund system. The suite offers a modern graphical user interface (GUI) and includes utilities for building and managing the application.
-
-## Project Overview
-
-The Pfandrechner Application Suite provides tools to:
-
-- **Calculate Deposits:** Accurately compute deposit values for different container types.
-- **Track Achievements:** Unlock rewards based on deposit activities.
-- **Maintain History:** Record deposit transactions and export them for analysis.
-- **Manage Data:** Ensure data persistence and efficient management.
-- **Now new! The Updater** This is a Function to keep up to date with the GitHub Repo! (the UI needs to be reloaded for changes to appear!)
-- **Support Images:** Integrate images for containers and achievements to enhance user experience.
-- **TooGoodToGo Integration:** A simple window to check active orders from TooGoodToGo.
-- **API Key Management:** A window to set and save API details to a `key.py` file.
-
-## Features
-
-- **Real-time Deposit Calculations:** Instantly compute deposit values as containers are added.
-- **Achievement System:** Unlock various tiers of rewards based on deposit milestones.
-- **History Tracking:** Maintain a log of all deposit transactions with options to export in CSV format. (/ IMPROVED in Version 7.04.001 \)
-- **Automatic Data Saving:** Ensure all data is saved without manual intervention.
-- **Image Management:** Associate images with containers and achievements for better visualization.
-- **Keyboard Shortcuts:** Utilize shortcuts for common actions to enhance usability.
-
-## Functionality of `main.py`
-
-The `main.py` file serves as the core of the Pfandrechner Application Suite, orchestrating various functionalities to provide a comprehensive user experience. Key functionalities include:
-
-- **Graphical User Interface (GUI) Initialization:** Sets up and launches the main application window, providing users with an intuitive interface to interact with the application's features.
-- **Deposit Calculation:** Enables users to input various container types and quantities, automatically computing the total deposit value based on predefined rates.
-- **Achievement Tracking:** Monitors user activities related to deposit returns and unlocks achievements when specific milestones are reached, enhancing user engagement.
-- **History Management:** Maintains a detailed log of all deposit transactions, allowing users to review past activities and export records for external analysis.
-- **Data Persistence:** Ensures that all user data, including transaction history and achievements, are saved and reloaded upon subsequent application launches, preventing data loss.
-- **Image Integration:** Displays relevant images for different container types and achievements within the GUI, providing a visually enriched user experience.
-- **Keyboard Shortcuts:** Implements various keyboard shortcuts to facilitate quick access to common functions, improving overall usability and efficiency.
-
-## Project Structure
-
-The repository is organized as follows:
-
-- `main.py`: The main application script that launches the Pfandrechner GUI.
-- `pfand_scanner.py`: Module responsible for scanning and identifying container types.
-- `buildutil/`: Directory containing utilities for building and packaging the application.
-- `images/`: Folder storing images associated with containers and achievements.
-- `tgtg_orderchecker/`: Module for checking orders, related to the "Too Good To Go" initiative.
-- `wiki/`: Documentation and resources related to the project.
-- `.gitignore`: Specifies files and directories to be ignored by Git.
-- `LICENSE`: The MIT license governing the use of this project.
-- `README.md`: This document providing an overview of the project.
-- `requirements.txt`: Lists the Python dependencies required to run the application.
-- `launch.cpp`: A C++ script, that monitors usage of RAM & CPU (mainly to debug)
-- `key.py`: A file where API details for the TooGoodToGo integration are stored.
-- `update.py`: A file which Updates based on the GitHub Repository (excludes the KeyFile)
-
-## Installation
-
-To set up the Pfandrechner Application Suite:
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone https://github.com/ZockerKatze/pfand.git
-   ```
-
-2. **Navigate to the Project Directory:**
-
-   ```bash
-   cd pfand
-   ```
-
-3. **Create and Activate a Virtual Environment (Recommended):**
-
-   On Windows:
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate
-   ```
-   On macOS/Linux:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-4. **Install Dependencies:**
-
-   Ensure you have Python installed. Then, install the required Python packages:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Run the Application:**
-
-   Launch the main application:
-
-   ```bash
-   python main.py
-   ```
-
-## Usage
-
-Upon running `main.py`, the GUI will be displayed, allowing users to:
-
-- Add containers and calculate their deposit values.
-- View and unlock achievements based on deposit milestones.
-- Track deposit history and export records as needed.
-- Check active orders from TooGoodToGo.
-- Set API keys via the dedicated settings window. (TGTG)
-
-## Application Screenshot
-
-![Pfandrechner GUI](./iex.png)
-
-## Contributing
-
-Contributions to the Pfandrechner Application Suite are welcome. To contribute:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes with descriptive messages.
-4. Push your branch and create a pull request.
-
-Please ensure adherence to the project's coding standards and include relevant documentation with your contributions.
-
-## License
-
-This project is licensed under the MIT License. For more details, refer to the `LICENSE` file in the repository.
+Welcome to the **Pfandrechner Application** – a sleek and powerful tool for tracking and calculating container deposits ("Pfand") in Austria 🇦🇹. Whether you're returning a few bottles or managing full bags, this app has you covered!
 
 ---
 
-*Note: This README is based on the current structure and available information from the repository. For the latest updates and detailed documentation, please refer to the project's wiki or contact the repository maintainers.*
+## ✨ Features
 
+🔢 **Deposit Calculator** – Instantly compute the total value of your returned bottles and cans.
+
+🏆 **Achievements** – Track your progress and unlock fun rewards for your deposit milestones.
+
+📜 **History & Exports** – View your past returns and export the data for safekeeping or bragging rights.
+
+📦 **TGTG Integration** – Check on your "Too Good To Go" orders directly within the app. ( You need to setup your API Key first! )
+
+⚙️ **Smart Updater** – Keeps the app fresh with the latest features and fixes.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/ZockerKatze/pfand.git
+cd pfand
+```
+
+### 2. Install Dependencies
+
+Make sure you’re using Python 3, then run:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Launch the App
+
+```bash
+python run.py
+```
+
+---
+
+## 🧮 How to Count
+
+You can either:
+
+- ✍️ **Manually** count and enter your container numbers  
+  _OR_  
+- 🔬 Use **µScan** – the improved scanner for fast and accurate counting with barcode recognition using _pyzbar_!
+
+---
+
+## 🤝 Contributing
+
+Want to improve the app or add new features? Awesome!  
+Fork the repo, make your changes, and send a pull request. 💡
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with 💚 for recycling and a cleaner future.
